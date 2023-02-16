@@ -133,3 +133,6 @@ app.*.symbols
 /.fvm/
 /test/
 /android/keystore/keystore.properties
+/lib/firebase_options.dart
+/ios/firebase_app_id_file.json
+/android/app/google-services.json

@@ -13,10 +13,15 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.2
+
+  logger: ^1.1.0
+
   flutter_bloc: ^8.1.2
   equatable: ^2.0.5
   get_it: ^7.2.0
 
+  firebase_core: ^2.5.0
+  firebase_auth: ^4.2.6
 
 dev_dependencies:
   flutter_test:
