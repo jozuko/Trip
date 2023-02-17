@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/util/colors.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/view/signin/singin_bloc.dart';
 import 'package:trip/view/signin/singin_mail_bloc.dart';
 import 'package:trip/view/signin/singin_mail_page.dart';
-import 'package:trip/widget/button/square_rounded_button.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -29,7 +29,13 @@ class _SignInState extends State<SignInPage> {
         _buildTitleBar(),
         Padding(
           padding: const EdgeInsets.all(margin),
-          child: _buildMailProvider(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SignInButton(Buttons.email, onPressed: _onTapEmail),
+              SignInButton(Buttons.google, onPressed: _onTapGoogle),
+            ],
+          ),
         ),
       ],
     );
@@ -39,36 +45,7 @@ class _SignInState extends State<SignInPage> {
     return const TitleBar(title: '旅行プラン作成アプリ');
   }
 
-  Widget _buildMailProvider() {
-    return SquareRoundedButton(
-      onPressed: onTapMailProvider,
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(
-              Icons.mail,
-              size: 40.0,
-              color: TColors.white,
-            ),
-            SizedBox(
-              width: marginS,
-            ),
-            Text(
-              'メールアドレスで認証',
-              style: TextStyle(
-                fontSize: fontSize3,
-                fontWeight: FontWeight.bold,
-                color: TColors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void onTapMailProvider() {
+  void _onTapEmail() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider(
@@ -77,5 +54,9 @@ class _SignInState extends State<SignInPage> {
         ),
       ),
     );
+  }
+
+  void _onTapGoogle() {
+    BlocProvider.of<SignInBloc>(context).add(SignInGoogleEvent());
   }
 }
