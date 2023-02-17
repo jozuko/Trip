@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trip/view/init/application_bloc.dart';
+import 'package:trip/view/loading.dart';
 
 ///
-/// Created by r.mori on 2023/02/16.
-/// Copyright (c) 2023 rei-frontier. All rights reserved.
+/// Created by jozuko on 2023/02/16.
+/// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class Application extends StatefulWidget {
-  const Application({super.key});
+class ApplicationPage extends StatefulWidget {
+  const ApplicationPage({
+    super.key,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -13,12 +18,22 @@ class Application extends StatefulWidget {
   }
 }
 
-class _ApplicationState extends State<Application> {
+class _ApplicationState extends State<ApplicationPage> {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Flutter Demo',
-      home:  MyHomePage(title: 'Flutter Demo Home Page'),
+      home: BlocBuilder<ApplicationBloc, ApplicationState>(
+        builder: (context, state) {
+          return SafeArea(
+            child: Stack(
+              children: [
+                if (state.isLoading) const LoadingWidget(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

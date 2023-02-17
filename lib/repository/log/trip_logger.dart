@@ -18,6 +18,18 @@ class TripLog {
       printTime: true, // Should each log print contain a timestamp
     ),
   );
+
+  static void d(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    logger.d('Trip::$message', error, stackTrace);
+  }
+
+  static void i(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    logger.i('Trip::$message', error, stackTrace);
+  }
+
+  static void e(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    logger.e('Trip::$message', error, stackTrace);
+  }
 }
 
 class TripLogFilter extends LogFilter {
