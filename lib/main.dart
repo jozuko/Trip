@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,15 +11,20 @@ import 'package:trip/view/init/application_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
   await DI.register();
   initializeDateFormatting('ja');
   Bloc.observer = SimpleBlocObserver();
 
-  runApp(BlocProvider(
-    create: (context) => ApplicationBloc(),
-    child: const ApplicationPage(),
-  ));
+  runApp(
+    BlocProvider(
+      create: (context) => ApplicationBloc(),
+      child: const ApplicationPage(),
+    ),
+  );
 }
 
 class SimpleBlocObserver extends BlocObserver {

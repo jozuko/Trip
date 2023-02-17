@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/view/init/application_bloc.dart';
-import 'package:trip/view/loading.dart';
+import 'package:trip/view/init/init_page.dart';
+import 'package:trip/view/main/home_page.dart';
+import 'package:trip/view/signin/signin_page.dart';
+import 'package:trip/view/signin/singin_bloc.dart';
+import 'package:trip/widget/loading.dart';
 
 ///
 /// Created by jozuko on 2023/02/16.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
+enum _ApplicationPageType {
+  init,
+  sign,
+  home,
+}
+
 class ApplicationPage extends StatefulWidget {
   const ApplicationPage({
     super.key,
@@ -19,16 +29,67 @@ class ApplicationPage extends StatefulWidget {
 }
 
 class _ApplicationState extends State<ApplicationPage> {
+  _ApplicationPageType _selectedPageType = _ApplicationPageType.init;
+
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [];
+  final List<RouteObserver<PageRoute>> _routeObservers = [];
+  final Map<_ApplicationPageType, Widget> _pages = {};
+
+  _ApplicationState() : super() {
+    for (var page in _ApplicationPageType.values) {
+      final globalKey = GlobalKey<NavigatorState>();
+      _navigatorKeys.add(globalKey);
+
+      final routeObserver = RouteObserver<PageRoute>();
+      _routeObservers.add(routeObserver);
+
+      switch (page) {
+        case _ApplicationPageType.init:
+          _pages[page] = const InitPage();
+          break;
+        case _ApplicationPageType.sign:
+          _pages[page] = BlocProvider(create: (context) => SignInBloc(), child: const SignInPage());
+          break;
+        case _ApplicationPageType.home:
+          _pages[page] = const HomePage();
+          break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'NotoSansJP',
+      ),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          child: child!,
+        );
+      },
       home: BlocBuilder<ApplicationBloc, ApplicationState>(
         builder: (context, state) {
-          return SafeArea(
+          if (!state.initialized) {
+            _selectedPageType = _ApplicationPageType.init;
+          } else if (!state.signedIn) {
+            _selectedPageType = _ApplicationPageType.sign;
+          } else {
+            _selectedPageType = _ApplicationPageType.home;
+          }
+
+          return WillPopScope(
+            onWillPop: () async {
+              return _canPop(state);
+            },
             child: Stack(
               children: [
-                if (state.isLoading) const LoadingWidget(),
+                Scaffold(
+                  body: _buildContents(),
+                ),
+                LoadingWidget(visible: state.isLoading),
               ],
             ),
           );
@@ -36,69 +97,44 @@ class _ApplicationState extends State<ApplicationPage> {
       ),
     );
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  Future<bool> _canPop(ApplicationState state) async {
+    if (state.isLoading) {
+      return false;
+    }
 
-  final String title;
+    final currentKeyState = _navigatorKeys[_selectedPageType.index].currentState;
+    if (currentKeyState?.canPop() == true) {
+      return await currentKeyState?.maybePop() == false;
+    }
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+    return true;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+  Widget _buildContents() {
+    final pageContents = <Widget>[];
+    for (var page in _ApplicationPageType.values) {
+      pageContents.add(
+        Navigator(
+          key: _navigatorKeys[page.index],
+          observers: [_routeObservers[page.index]],
+          onGenerateRoute: (settings) {
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (context) {
+                return _pages[page] ?? Container();
+              },
+            );
+          },
         ),
+      );
+    }
+
+    return SafeArea(
+      child: IndexedStack(
+        index: _selectedPageType.index,
+        children: pageContents,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

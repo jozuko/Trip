@@ -20,22 +20,22 @@ class TripLog {
   );
 
   static void d(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    logger.d('Trip::$message', error, stackTrace);
+    logger.d('[Trip]$message', error, stackTrace);
   }
 
   static void i(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    logger.i('Trip::$message', error, stackTrace);
+    logger.i('[Trip]$message', error, stackTrace);
   }
 
   static void e(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    logger.e('Trip::$message', error, stackTrace);
+    logger.e('[Trip]$message', error, stackTrace);
   }
 }
 
 class TripLogFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
-    if (Global.isRelease) {
+    if (isRelease) {
       return (event.level.index >= Level.info.index);
     } else {
       return true;
