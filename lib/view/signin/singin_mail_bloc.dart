@@ -71,19 +71,16 @@ class SignInMailBloc extends Bloc<SignInMailEvent, SignInMailState> {
     final authService = getIt.get<AuthService>();
     final authResult = await authService.authWithMail(state.email, state.password);
     switch (authResult) {
-      case AuthResult.success:
+      case AuthResultMail.success:
         emit(state.copyWith(isLoading: false, isDoneAuth: true));
         break;
-      case AuthResult.weekPassword:
+      case AuthResultMail.weekPassword:
         emit(state.copyWith(errorPassword: 'もう少し複雑なパスワードを指定してください'));
         break;
-      case AuthResult.userNotFound:
-      case AuthResult.wrongPassword:
-      case AuthResult.failedEmail:
+      case AuthResultMail.userNotFound:
+      case AuthResultMail.wrongPassword:
+      case AuthResultMail.failed:
         emit(state.copyWith(errorPassword: 'ログインできませんでした。\nメールアドレスとパスワードをご確認の上、通信環境の良いところで再度お試しください。'));
-        break;
-      case AuthResult.failedGoogle:
-        emit(state.copyWith(errorPassword: 'ログインできませんでした。'));
         break;
     }
   }

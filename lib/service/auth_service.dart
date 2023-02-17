@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/repository/shared_holder.dart';
@@ -12,6 +13,7 @@ import 'package:trip/util/global.dart';
 enum AuthProvider {
   email,
   google,
+  apple,
 }
 
 class AuthService {
@@ -34,9 +36,9 @@ class AuthService {
     }
   }
 
-  Future<AuthResult> authWithMail(String email, String password) async {
+  Future<AuthResultMail> authWithMail(String email, String password) async {
     final result = await _signInWithEmailAndPassword(email, password);
-    if (result == AuthResult.userNotFound) {
+    if (result == AuthResultMail.userNotFound) {
       return await _createUserWithEmailAndPassword(email, password);
     }
     return result;
@@ -45,37 +47,42 @@ class AuthService {
   Future<void> signOut() async {
     TripLog.i('AuthService::signOut');
     await _auth.signOut();
+    if (sharedHolder.authProvider == AuthProvider.google) {
+      await GoogleSignIn().signOut();
+    }
+
+    await _auth.signOut();
   }
 
-  Future<AuthResult> _signInWithEmailAndPassword(String email, String password) async {
+  Future<AuthResultMail> _signInWithEmailAndPassword(String email, String password) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
       if (userCredential.user != null) {
         TripLog.i('AuthService::signInWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
-        return AuthResult.success;
+        return AuthResultMail.success;
       } else {
         TripLog.i('AuthService::signInWithEmailAndPassword failed.');
-        return AuthResult.failedEmail;
+        return AuthResultMail.failed;
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         TripLog.i('AuthService::signInWithEmailAndPassword No user found for that email.', e);
-        return AuthResult.userNotFound;
+        return AuthResultMail.userNotFound;
       } else if (e.code == 'wrong-password') {
         TripLog.e('AuthService::signInWithEmailAndPassword Wrong password provided for that user.', e);
-        return AuthResult.wrongPassword;
+        return AuthResultMail.wrongPassword;
       } else {
         TripLog.e('AuthService::signInWithEmailAndPassword', e);
-        return AuthResult.failedEmail;
+        return AuthResultMail.failed;
       }
     } catch (e) {
       TripLog.e('AuthService::signInWithEmailAndPassword', e);
-      return AuthResult.failedEmail;
+      return AuthResultMail.failed;
     }
   }
 
-  Future<AuthResult> _createUserWithEmailAndPassword(String email, String password) async {
+  Future<AuthResultMail> _createUserWithEmailAndPassword(String email, String password) async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -84,29 +91,29 @@ class AuthService {
       if (userCredential.user != null) {
         TripLog.i('AuthService::createUserWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
-        return AuthResult.success;
+        return AuthResultMail.success;
       } else {
         TripLog.e('AuthService::createUserWithEmailAndPassword failed.');
-        return AuthResult.failedEmail;
+        return AuthResultMail.failed;
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         TripLog.i('AuthService::createUserWithEmailAndPassword The password provided is too weak.', e);
-        return AuthResult.weekPassword;
+        return AuthResultMail.weekPassword;
       } else if (e.code == 'email-already-in-use') {
         TripLog.e('AuthService::createUserWithEmailAndPassword The account already exists for that email.', e);
-        return AuthResult.failedEmail;
+        return AuthResultMail.failed;
       } else {
         TripLog.e('AuthService::createUserWithEmailAndPassword', e);
-        return AuthResult.failedEmail;
+        return AuthResultMail.failed;
       }
     } catch (e) {
       TripLog.e('AuthService::createUserWithEmailAndPassword', e);
-      return AuthResult.failedEmail;
+      return AuthResultMail.failed;
     }
   }
 
-  Future<AuthResult> authWithGoogle() async {
+  Future<AuthResultThirdParty> authWithGoogle() async {
     // Trigger the authentication flow
     final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -121,26 +128,56 @@ class AuthService {
 
     // Once signed in, return the UserCredential
     try {
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      if (userCredential.user != null) {
-        TripLog.i('AuthService::authWithGoogle success');
-        return AuthResult.success;
-      } else {
+      final userCredential = await _auth.signInWithCredential(credential);
+      if (userCredential.user == null) {
         TripLog.e('AuthService::authWithGoogle failed.');
-        return AuthResult.failedGoogle;
+        return AuthResultThirdParty.failed;
+      } else {
+        TripLog.i('AuthService::authWithGoogle success');
+        sharedHolder.authProvider = AuthProvider.google;
+        return AuthResultThirdParty.success;
       }
     } catch (e) {
       TripLog.e('AuthService::authWithGoogle', e);
-      return AuthResult.failedGoogle;
+      return AuthResultThirdParty.failed;
+    }
+  }
+
+  Future<AuthResultThirdParty> authWithApple() async {
+    final appleProvider = AppleAuthProvider();
+
+    try {
+      final UserCredential? userCredential;
+      if (kIsWeb) {
+        userCredential = await _auth.signInWithPopup(appleProvider);
+      } else {
+        userCredential = await _auth.signInWithProvider(appleProvider);
+      }
+
+      if (userCredential.user == null) {
+        TripLog.e('AuthService::authWithApple failed.');
+        return AuthResultThirdParty.failed;
+      } else {
+        TripLog.i('AuthService::authWithApple success');
+        sharedHolder.authProvider = AuthProvider.apple;
+        return AuthResultThirdParty.success;
+      }
+    } catch (e) {
+      TripLog.e('AuthService::authWithApple', e);
+      return AuthResultThirdParty.failed;
     }
   }
 }
 
-enum AuthResult {
+enum AuthResultMail {
   success,
   weekPassword,
   userNotFound,
   wrongPassword,
-  failedEmail,
-  failedGoogle,
+  failed,
+}
+
+enum AuthResultThirdParty {
+  success,
+  failed,
 }

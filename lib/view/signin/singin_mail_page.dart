@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/view/base_state.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/signin/singin_mail_bloc.dart';
 import 'package:trip/widget/button/square_rounded_button.dart';
-import 'package:trip/widget/dialog/animation_dialog.dart';
-import 'package:trip/widget/dialog/default_dialog.dart';
 import 'package:trip/widget/field/email_field.dart';
 import 'package:trip/widget/field/password_field.dart';
 import 'package:trip/widget/title_bar.dart';
@@ -24,19 +23,21 @@ class SignInMailPage extends StatefulWidget {
   }
 }
 
-class _SignInMailState extends State<SignInMailPage> {
+class _SignInMailState extends BaseState<SignInMailPage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SignInMailBloc, SignInMailState>(
       listener: (context, state) async {
         if (state.message.isNotEmpty) {
-          _showMessage(state.message);
+          showMessage(state.message, callback: () {
+            context.read<SignInMailBloc>().add(SignInMailClearMessageEvent());
+          });
         }
 
         if (state.isDoneAuth) {
           BlocProvider.of<ApplicationBloc>(context).add(ApplicationCheckAuthEvent());
         } else {
-          BlocProvider.of<ApplicationBloc>(context).add(ApplicationChangeLoadingEvent(isLoading: state.isLoading));
+          changeLoading(state.isLoading);
         }
       },
       builder: (context, state) {
@@ -124,25 +125,5 @@ class _SignInMailState extends State<SignInMailPage> {
   void _onClickSignIn() {
     primaryFocus?.unfocus();
     BlocProvider.of<SignInMailBloc>(context).add(SignInMailSubmitEvent());
-  }
-
-  Future<void> _showMessage(String? message) async {
-    if (message == null) {
-      return;
-    }
-
-    showAnimatedDialog(
-      context: context,
-      builder: (_) {
-        return DefaultDialog(
-          text: message,
-          onPressedButton: (canceled) {
-            Navigator.pop(context);
-          },
-        );
-      },
-    ).then((value) {
-      context.read<SignInMailBloc>().add(SignInMailClearMessageEvent());
-    });
   }
 }
