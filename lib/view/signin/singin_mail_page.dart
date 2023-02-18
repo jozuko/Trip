@@ -64,7 +64,7 @@ class _SignInMailState extends BaseState<SignInMailPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   EmailField(
-                                    initialValue: state.email,
+                                    value: state.email,
                                     errorText: state.errorEmail,
                                     textInputAction: TextInputAction.next,
                                     onChanged: (value) {

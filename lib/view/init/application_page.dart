@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:trip/repository/log/trip_logger.dart';
-import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
 import 'package:trip/view/main/home_page.dart';
+import 'package:trip/view/receive_share/receive_share_bloc.dart';
+import 'package:trip/view/receive_share/receive_share_page.dart';
 import 'package:trip/view/signin/signin_page.dart';
 import 'package:trip/view/signin/singin_bloc.dart';
 import 'package:trip/widget/loading.dart';
@@ -19,6 +20,7 @@ import 'package:trip/widget/loading.dart';
 enum _ApplicationPageType {
   init,
   sign,
+  receiveShare,
   home,
 }
 
@@ -40,6 +42,7 @@ class _ApplicationState extends State<ApplicationPage> {
   final List<RouteObserver<PageRoute>> _routeObservers = [];
   final Map<_ApplicationPageType, Widget> _pages = {};
 
+  final ReceiveShareBloc _receiveShareBloc = ReceiveShareBloc();
   StreamSubscription? _intentDataStreamSubscription;
   String? _sharedText;
 
@@ -57,6 +60,9 @@ class _ApplicationState extends State<ApplicationPage> {
           break;
         case _ApplicationPageType.sign:
           _pages[page] = BlocProvider(create: (context) => SignInBloc(), child: const SignInPage());
+          break;
+        case _ApplicationPageType.receiveShare:
+          _pages[page] = BlocProvider(create: (context) => _receiveShareBloc, child: const ReceiveSharePage());
           break;
         case _ApplicationPageType.home:
           _pages[page] = const HomePage();
@@ -109,20 +115,8 @@ class _ApplicationState extends State<ApplicationPage> {
       home: BlocBuilder<ApplicationBloc, ApplicationState>(
         builder: (context, state) {
           if (_sharedText != null && _sharedText?.isNotEmpty == true) {
-            return WillPopScope(
-              onWillPop: () async {
-                return _canPop(state);
-              },
-              child: Scaffold(
-                body: SafeArea(
-                  child: Center(
-                    child: Column(
-                      children: [const Text("Shared urls/text:", style: TextStyle(color: TColors.blackText)), Text(_sharedText ?? "")],
-                    ),
-                  ),
-                ),
-              ),
-            );
+            _receiveShareBloc.add(ReceiveShareUrlEvent(url: _sharedText!));
+            _selectedPageType = _ApplicationPageType.receiveShare;
           } else {
             if (!state.initialized) {
               _selectedPageType = _ApplicationPageType.init;
@@ -140,7 +134,9 @@ class _ApplicationState extends State<ApplicationPage> {
             child: Stack(
               children: [
                 Scaffold(
-                  body: _buildContents(),
+                  body: SafeArea(
+                    child: _buildContents(),
+                  ),
                 ),
                 LoadingWidget(visible: state.isLoading),
               ],
@@ -183,11 +179,9 @@ class _ApplicationState extends State<ApplicationPage> {
       );
     }
 
-    return SafeArea(
-      child: IndexedStack(
-        index: _selectedPageType.index,
-        children: pageContents,
-      ),
+    return IndexedStack(
+      index: _selectedPageType.index,
+      children: pageContents,
     );
   }
 }
