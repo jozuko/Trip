@@ -11,8 +11,8 @@ import 'package:trip/util/global.dart';
 class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
   ApplicationBloc() : super(const ApplicationState()) {
     on<ApplicationInitEvent>(_onInit);
-    on<ApplicationChangeLoadingEvent>(_onChangeLoading);
     on<ApplicationCheckAuthEvent>(_onCheckAuth);
+    on<ApplicationReceiveSharedUrlEvent>(_onReceiveSharedText);
 
     add(ApplicationInitEvent());
   }
@@ -37,10 +37,8 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
     }
   }
 
-  void _onChangeLoading(ApplicationChangeLoadingEvent event, emit) {
-    if (event.isLoading != state.isLoading) {
-      emit(state.copyWith(isLoading: event.isLoading));
-    }
+  void _onReceiveSharedText(ApplicationReceiveSharedUrlEvent event, emit) {
+    emit(state.copyWith(sharedText: event.sharedText));
   }
 }
 
@@ -53,45 +51,57 @@ class ApplicationInitEvent extends ApplicationEvent {}
 
 class ApplicationCheckAuthEvent extends ApplicationEvent {}
 
-class ApplicationChangeLoadingEvent extends ApplicationEvent {
-  final bool isLoading;
+class ApplicationReceiveSharedUrlEvent extends ApplicationEvent {
+  final String sharedText;
 
-  ApplicationChangeLoadingEvent({required this.isLoading});
+  ApplicationReceiveSharedUrlEvent({
+    required this.sharedText,
+  });
 
   @override
-  List<Object?> get props => [isLoading];
+  List<Object?> get props => [sharedText];
 }
 
 class ApplicationState extends Equatable {
   final bool isLoading;
   final bool initialized;
   final bool signedIn;
+  final String sharedText;
 
   const ApplicationState({
     this.isLoading = true,
     this.initialized = false,
     this.signedIn = false,
+    this.sharedText = '',
   });
 
   ApplicationState copyWith({
     bool? isLoading,
     bool? initialized,
     bool? signedIn,
+    String? sharedText,
   }) {
     return ApplicationState(
       isLoading: isLoading ?? this.isLoading,
       initialized: initialized ?? this.initialized,
       signedIn: signedIn ?? this.signedIn,
+      sharedText: sharedText ?? this.sharedText,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, initialized];
+  List<Object?> get props => [
+        isLoading,
+        initialized,
+        signedIn,
+        sharedText,
+      ];
 
   @override
   String toString() {
     return 'isLoading:$isLoading, '
         'initialized:$initialized, '
-        'signedIn:$signedIn';
+        'signedIn:$signedIn, '
+        'sharedText:$sharedText';
   }
 }

@@ -10,20 +10,21 @@ import 'package:trip/util/global.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class ReceiveShareBloc extends Bloc<ReceiveShareEvent, ReceiveShareState> {
-  ReceiveShareBloc() : super(const ReceiveShareState()) {
+  ReceiveShareBloc({required String url}) : super(ReceiveShareState(analyzedUrl: AnalyzedUrl(url: url, title: '', description: '', imageUrl: ''))) {
     on<ReceiveShareUrlEvent>(_onReceiveUrl);
 
     TripLog.d("ReceiveShareBloc::constructor");
   }
 
   Future<void> _onReceiveUrl(ReceiveShareUrlEvent event, emit) async {
-    if (state.analyzedUrl?.url != event.url) {
-      //emit(const ReceiveShareState(isLoading: true));
-
-      final analyzer = getIt.get<UrlAnalyzer>();
-      final analyzedUrl = await analyzer.analyze(event.url);
-      emit(ReceiveShareState(analyzedUrl: analyzedUrl));
+    final url = state.analyzedUrl?.url ?? '';
+    if (url.isEmpty) {
+      return;
     }
+
+    final analyzer = getIt.get<UrlAnalyzer>();
+    final analyzedUrl = await analyzer.analyze(url);
+    emit(ReceiveShareState(analyzedUrl: analyzedUrl));
   }
 }
 
@@ -32,16 +33,7 @@ abstract class ReceiveShareEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class ReceiveShareUrlEvent extends ReceiveShareEvent {
-  final String url;
-
-  ReceiveShareUrlEvent({
-    required this.url,
-  });
-
-  @override
-  List<Object?> get props => [url];
-}
+class ReceiveShareUrlEvent extends ReceiveShareEvent {}
 
 class ReceiveShareChangeTitleEvent extends ReceiveShareEvent {
   final String title;

@@ -37,18 +37,18 @@ class SingleLineField extends StatefulWidget {
 
 class _SingleLineFieldState extends State<SingleLineField> {
   final _inputController = TextEditingController();
-  
+
   @override
   void dispose() {
     _inputController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     TripLog.d("SingleTextField::build label:${widget.labelText}, initialValue:${widget.value}");
     _inputController.text = widget.value ?? '';
-    
+
     return Container(
       padding: const EdgeInsets.all(8),
       height: widget.errorText == null ? 80 : 100,

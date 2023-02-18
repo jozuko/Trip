@@ -9,6 +9,7 @@ import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/signin/singin_bloc.dart';
 import 'package:trip/view/signin/singin_mail_bloc.dart';
 import 'package:trip/view/signin/singin_mail_page.dart';
+import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -37,26 +38,29 @@ class _SignInState extends BaseState<SignInPage> {
 
         if (state.isDoneAuth) {
           BlocProvider.of<ApplicationBloc>(context).add(ApplicationCheckAuthEvent());
-        } else {
-          changeLoading(state.isLoading);
         }
       },
       builder: (context, state) {
-        return Column(
-          mainAxisSize: MainAxisSize.max,
+        return Stack(
           children: [
-            _buildTitleBar(),
-            Padding(
-              padding: const EdgeInsets.all(margin),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SignInButton(Buttons.email, onPressed: _onTapEmail),
-                  SignInButton(Buttons.google, onPressed: _onTapGoogle),
-                  if (Platform.isIOS) SignInButton(Buttons.apple, onPressed: _onTapApple),
-                ],
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                _buildTitleBar(),
+                Padding(
+                  padding: const EdgeInsets.all(margin),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SignInButton(Buttons.email, onPressed: _onTapEmail),
+                      SignInButton(Buttons.google, onPressed: _onTapGoogle),
+                      if (Platform.isIOS) SignInButton(Buttons.apple, onPressed: _onTapApple),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            LoadingWidget(visible: state.isLoading),
           ],
         );
       },

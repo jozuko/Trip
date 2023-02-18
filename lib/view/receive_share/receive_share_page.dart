@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/colors.dart';
@@ -25,10 +28,7 @@ class ReceiveSharePage extends StatefulWidget {
 class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ReceiveShareBloc, ReceiveShareState>(
-      listener: (context, state) async {
-        changeLoading(state.isLoading);
-      },
+    return BlocBuilder<ReceiveShareBloc, ReceiveShareState>(
       builder: (context, state) {
         TripLog.d("ReceiveSharePage::build ${state.analyzedUrl?.url}");
 
@@ -94,8 +94,8 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   }
 
   void _onPressedAdd() {
-    while (Navigator.canPop(context)) {
-      Navigator.pop(context);
+    if (Platform.isAndroid) {
+      SystemNavigator.pop();
     }
   }
 }

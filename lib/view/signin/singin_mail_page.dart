@@ -8,6 +8,7 @@ import 'package:trip/view/signin/singin_mail_bloc.dart';
 import 'package:trip/widget/button/square_rounded_button.dart';
 import 'package:trip/widget/field/email_field.dart';
 import 'package:trip/widget/field/password_field.dart';
+import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -36,8 +37,6 @@ class _SignInMailState extends BaseState<SignInMailPage> {
 
         if (state.isDoneAuth) {
           BlocProvider.of<ApplicationBloc>(context).add(ApplicationCheckAuthEvent());
-        } else {
-          changeLoading(state.isLoading);
         }
       },
       builder: (context, state) {
@@ -50,9 +49,7 @@ class _SignInMailState extends BaseState<SignInMailPage> {
               child: Stack(
                 children: [
                   Container(
-                    decoration: const BoxDecoration(
-                      color: TColors.appBack,
-                    ),
+                    //color: TColors.appBack,
                     child: Column(
                       children: [
                         _buildTitleBar(),
@@ -109,6 +106,7 @@ class _SignInMailState extends BaseState<SignInMailPage> {
                       ],
                     ),
                   ),
+                  LoadingWidget(visible: state.isLoading),
                 ],
               ),
             ),

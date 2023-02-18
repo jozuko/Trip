@@ -12,4 +12,8 @@ extension StringEx on String? {
     }
     return this;
   }
+
+  String get nullToEmpty {
+    return this ?? '';
+  }
 }
