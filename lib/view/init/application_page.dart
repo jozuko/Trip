@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:trip/repository/log/trip_logger.dart';
+import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
 import 'package:trip/view/main/home_page.dart';
@@ -35,6 +40,9 @@ class _ApplicationState extends State<ApplicationPage> {
   final List<RouteObserver<PageRoute>> _routeObservers = [];
   final Map<_ApplicationPageType, Widget> _pages = {};
 
+  StreamSubscription? _intentDataStreamSubscription;
+  String? _sharedText;
+
   _ApplicationState() : super() {
     for (var page in _ApplicationPageType.values) {
       final globalKey = GlobalKey<NavigatorState>();
@@ -58,6 +66,34 @@ class _ApplicationState extends State<ApplicationPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String value) {
+      setState(() {
+        _sharedText = value;
+      });
+    }, onError: (err) {
+      TripLog.e("getLinkStream error: $err");
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String? value) {
+      setState(() {
+        _sharedText = value;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription?.cancel();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
@@ -72,12 +108,29 @@ class _ApplicationState extends State<ApplicationPage> {
       },
       home: BlocBuilder<ApplicationBloc, ApplicationState>(
         builder: (context, state) {
-          if (!state.initialized) {
-            _selectedPageType = _ApplicationPageType.init;
-          } else if (!state.signedIn) {
-            _selectedPageType = _ApplicationPageType.sign;
+          if (_sharedText != null && _sharedText?.isNotEmpty == true) {
+            return WillPopScope(
+              onWillPop: () async {
+                return _canPop(state);
+              },
+              child: Scaffold(
+                body: SafeArea(
+                  child: Center(
+                    child: Column(
+                      children: [const Text("Shared urls/text:", style: TextStyle(color: TColors.blackText)), Text(_sharedText ?? "")],
+                    ),
+                  ),
+                ),
+              ),
+            );
           } else {
-            _selectedPageType = _ApplicationPageType.home;
+            if (!state.initialized) {
+              _selectedPageType = _ApplicationPageType.init;
+            } else if (!state.signedIn) {
+              _selectedPageType = _ApplicationPageType.sign;
+            } else {
+              _selectedPageType = _ApplicationPageType.home;
+            }
           }
 
           return WillPopScope(
