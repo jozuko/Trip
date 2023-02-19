@@ -8,8 +8,8 @@ import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/receive_share/receive_share_bloc.dart';
-import 'package:trip/widget/button/square_rounded_button.dart';
 import 'package:trip/widget/field/single_line_field.dart';
+import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -27,75 +27,98 @@ class ReceiveSharePage extends StatefulWidget {
 
 class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ReceiveShareBloc, ReceiveShareState>(
-      builder: (context, state) {
-        TripLog.d("ReceiveSharePage::build ${state.analyzedUrl?.url}");
+  void initState() {
+    super.initState();
+    TripLog.d('_ReceiveShareState::initState call analyze');
+    BlocProvider.of<ReceiveShareBloc>(context).add(ReceiveShareUrlEvent());
+  }
 
-        return Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            _buildTitleBar(),
-            Padding(
-              padding: const EdgeInsets.all(margin),
-              child: Center(
-                child: Column(
-                  children: [
-                    SingleLineField(
-                      labelText: 'タイトル',
-                      hintText: 'ブックマークタイトル',
-                      value: state.analyzedUrl?.title,
-                      textInputType: TextInputType.text,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) {
-                        context.read<ReceiveShareBloc>().add(ReceiveShareChangeTitleEvent(title: value));
-                      },
-                    ),
-                    SingleLineField(
-                      labelText: 'URL',
-                      hintText: 'https://***',
-                      value: state.analyzedUrl?.url,
-                      textInputType: TextInputType.text,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) {
-                        context.read<ReceiveShareBloc>().add(ReceiveShareChangeUrlEvent(url: value));
-                      },
-                    ),
-                    SquareRoundedButton(
-                      width: 200,
-                      height: 40,
-                      radius: 40 / 2,
-                      backgroundColor: TColors.blackButtonBack,
-                      inkColor: TColors.blackButtonInk,
-                      showBarrier: false,
-                      showBorder: false,
-                      onPressed: () {
-                        _onPressedAdd();
-                      },
-                      child: const Center(
-                        child: Text(
-                          'ブックマークを追加',
-                          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal, color: TColors.blackButtonText),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<ReceiveShareBloc, ReceiveShareBaseState>(
+      listener: (context, state) {
+        if (state is ReceiveShareDoneState) {
+          _onPressedBack();
+        }
+      },
+      builder: (context, state) {
+        if (state is ReceiveShareState) {
+          return Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  _buildTitleBar(),
+                  Padding(
+                    padding: const EdgeInsets.all(margin),
+                    child: _buildContents(state),
+                  ),
+                ],
               ),
-            ),
-          ],
-        );
+              LoadingWidget(visible: state.isLoading),
+            ],
+          );
+        } else {
+          return Container(
+            color: TColors.appBack,
+          );
+        }
       },
     );
   }
 
   Widget _buildTitleBar() {
-    return const TitleBar(title: '旅行プラン作成アプリ');
+    if (Platform.isAndroid) {
+      return TitleBar(
+        title: 'URLを追加',
+        leadingIcon: Icons.arrow_back_ios,
+        onTapLeadingIcon: _onPressedBack,
+        rightButton: Icons.send,
+        onTapRightIcon: _onPressedAdd,
+      );
+    } else {
+      return TitleBar(
+        title: 'URLを追加',
+        rightButton: Icons.send,
+        onTapRightIcon: _onPressedAdd,
+      );
+    }
   }
 
-  void _onPressedAdd() {
+  Widget _buildContents(ReceiveShareState state) {
+    return Column(
+      children: [
+        SingleLineField(
+          labelText: 'タイトル',
+          hintText: 'ブックマークタイトル',
+          value: state.bookmark?.title,
+          textInputType: TextInputType.text,
+          textInputAction: TextInputAction.next,
+          onChanged: (value) {
+            context.read<ReceiveShareBloc>().add(ReceiveShareChangeTitleEvent(title: value));
+          },
+        ),
+        SingleLineField(
+          labelText: 'URL',
+          hintText: 'https://***',
+          value: state.bookmark?.url,
+          textInputType: TextInputType.text,
+          textInputAction: TextInputAction.next,
+          onChanged: (value) {
+            context.read<ReceiveShareBloc>().add(ReceiveShareChangeUrlEvent(url: value));
+          },
+        ),
+      ],
+    );
+  }
+
+  void _onPressedBack() {
     if (Platform.isAndroid) {
       SystemNavigator.pop();
     }
+  }
+
+  void _onPressedAdd() {
+    context.read<ReceiveShareBloc>().add(ReceiveShareAddBookmarkEvent());
   }
 }

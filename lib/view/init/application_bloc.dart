@@ -1,44 +1,63 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/service/auth_service.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/util/string_ex.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
-  ApplicationBloc() : super(const ApplicationState()) {
+  final _authService = getIt.get<AuthService>();
+  StreamSubscription? _intentDataStreamSubscription;
+
+  ApplicationBloc() : super(const ApplicationState(isLoading: true, initialized: false, signedIn: false)) {
     on<ApplicationInitEvent>(_onInit);
     on<ApplicationCheckAuthEvent>(_onCheckAuth);
-    on<ApplicationReceiveSharedUrlEvent>(_onReceiveSharedText);
+    on<ApplicationReceiveSharedEvent>(_onReceiveShared);
+  }
 
-    add(ApplicationInitEvent());
+  void dispose() {
+    _intentDataStreamSubscription?.cancel();
   }
 
   Future<void> _onInit(ApplicationInitEvent event, Emitter<ApplicationState> emit) async {
-    final authService = getIt.get<AuthService>();
-    authService.initialize();
-    await authService.signOut();
+    _intentDataStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String value) {
+      TripLog.d("ApplicationBloc::getTextStream value:$value");
+      add(ApplicationReceiveSharedEvent(value: value));
+    }, onError: (e) {
+      TripLog.e("ApplicationBloc::getTextStream error: $e");
+    });
 
-    emit(state.copyWith(isLoading: false, initialized: false, signedIn: false));
-    add(ApplicationCheckAuthEvent());
+    ReceiveSharingIntent.getInitialText().then((String? value) {
+      if (value.nullToEmpty.isNotEmpty) {
+        TripLog.d("ApplicationBloc::getInitialText value:$value");
+        add(ApplicationReceiveSharedEvent(value: value!));
+      }
+    });
+
+    _authService.initialize((user) {
+      emit(state.copyWith(initialized: true, signedIn: user != null));
+    });
+  }
+
+  void _onReceiveShared(ApplicationReceiveSharedEvent event, emit) {
+    emit(state.copyWith(sharedText: event.value));
   }
 
   void _onCheckAuth(ApplicationCheckAuthEvent event, emit) {
-    final authService = getIt.get<AuthService>();
-    if (authService.user == null) {
+    if (_authService.user == null) {
       TripLog.d("ApplicationBloc::_onCheckAuth user is null");
       emit(state.copyWith(isLoading: false, initialized: true, signedIn: false));
     } else {
       TripLog.d("ApplicationBloc::_onCheckAuth user is not null");
       emit(state.copyWith(isLoading: false, initialized: true, signedIn: true));
     }
-  }
-
-  void _onReceiveSharedText(ApplicationReceiveSharedUrlEvent event, emit) {
-    emit(state.copyWith(sharedText: event.sharedText));
   }
 }
 
@@ -51,15 +70,15 @@ class ApplicationInitEvent extends ApplicationEvent {}
 
 class ApplicationCheckAuthEvent extends ApplicationEvent {}
 
-class ApplicationReceiveSharedUrlEvent extends ApplicationEvent {
-  final String sharedText;
+class ApplicationReceiveSharedEvent extends ApplicationEvent {
+  final String value;
 
-  ApplicationReceiveSharedUrlEvent({
-    required this.sharedText,
+  ApplicationReceiveSharedEvent({
+    required this.value,
   });
 
   @override
-  List<Object?> get props => [sharedText];
+  List<Object?> get props => [value];
 }
 
 class ApplicationState extends Equatable {

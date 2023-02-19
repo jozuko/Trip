@@ -1,7 +1,7 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
-import 'package:trip/domain/AnalyzedUrl.dart';
+import 'package:trip/domain/bookmark.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 
 ///
@@ -9,9 +9,9 @@ import 'package:trip/repository/log/trip_logger.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class UrlAnalyzer {
-  Future<AnalyzedUrl> analyze(String url) async {
+  Future<Bookmark> analyze(String url) async {
     TripLog.i('UrlAnalyzer::analyze start [$url]');
-    var analyzed = AnalyzedUrl(url: url, title: '', description: '', imageUrl: '');
+    var bookmark = Bookmark(url: url, title: '', description: '', imageUrl: '');
 
     try {
       Response response = await get(Uri.parse(url));
@@ -19,30 +19,30 @@ class UrlAnalyzer {
       final head = document.head;
       if (head == null) {
         TripLog.i('UrlAnalyzer::analyze no head url');
-        return analyzed;
+        return bookmark;
       }
 
-      analyzed = analyzed.copyWith(title: getTitle(head));
+      bookmark = bookmark.copyWith(title: getTitle(head));
 
       final metas = head.getElementsByTagName('meta');
       for (var meta in metas) {
         if (meta.attributes['name'] == 'description') {
           final description = meta.attributes['content'];
-          analyzed = analyzed.copyWith(description: description);
+          bookmark = bookmark.copyWith(description: description);
           continue;
         }
 
         if (meta.attributes['property'] == 'og:image') {
           final image = meta.attributes['content'];
-          analyzed = analyzed.copyWith(imageUrl: image);
+          bookmark = bookmark.copyWith(imageUrl: image);
           continue;
         }
       }
 
-      return analyzed;
+      return bookmark;
     } catch (e) {
       TripLog.e('UrlAnalyzer::analyze', e);
-      return analyzed;
+      return bookmark;
     }
   }
 

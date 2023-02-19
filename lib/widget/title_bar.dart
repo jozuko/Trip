@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:trip/util/colors.dart';
+import 'package:trip/util/global.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
@@ -16,7 +17,7 @@ class TitleBar extends StatelessWidget {
 
   const TitleBar({
     super.key,
-    required this.title,
+    this.title = appName,
     this.leadingIcon,
     this.onTapLeadingIcon,
     this.rightButton,

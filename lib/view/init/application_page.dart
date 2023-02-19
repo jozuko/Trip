@@ -1,11 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/colors.dart';
-import 'package:trip/util/string_ex.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
 import 'package:trip/view/main/home_page.dart';
@@ -30,30 +26,16 @@ class ApplicationPage extends StatefulWidget {
 }
 
 class _ApplicationState extends State<ApplicationPage> {
-  StreamSubscription? _intentDataStreamSubscription;
-
   @override
   void initState() {
     super.initState();
 
-    // For sharing or opening urls/text coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String value) {
-      BlocProvider.of<ApplicationBloc>(context).add(ApplicationReceiveSharedUrlEvent(sharedText: value));
-    }, onError: (err) {
-      TripLog.e("getLinkStream error: $err");
-    });
-
-    // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String? value) {
-      if (value.nullToEmpty.isNotEmpty) {
-        BlocProvider.of<ApplicationBloc>(context).add(ApplicationReceiveSharedUrlEvent(sharedText: value!));
-      }
-    });
+    BlocProvider.of<ApplicationBloc>(context).add(ApplicationInitEvent());
   }
 
   @override
   void dispose() {
-    _intentDataStreamSubscription?.cancel();
+    BlocProvider.of<ApplicationBloc>(context).dispose();
 
     super.dispose();
   }
@@ -67,7 +49,7 @@ class _ApplicationState extends State<ApplicationPage> {
 
         if (state.sharedText.isNotEmpty) {
           child = BlocProvider(
-            create: (context) => ReceiveShareBloc(url: state.sharedText)..add(ReceiveShareUrlEvent()),
+            create: (context) => ReceiveShareBloc(url: state.sharedText),
             child: const ReceiveSharePage(),
           );
         } else {

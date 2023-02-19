@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/service/auth_service.dart';
+import 'package:trip/service/bookmark_service.dart';
 import 'package:trip/service/url_analyzer.dart';
 
 ///
@@ -17,5 +18,6 @@ class DI {
 
     getIt.registerSingleton(AuthService());
     getIt.registerSingleton(UrlAnalyzer());
+    getIt.registerSingleton(BookmarkService());
   }
 }

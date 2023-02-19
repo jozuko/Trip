@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/domain/AnalyzedUrl.dart';
-import 'package:trip/repository/log/trip_logger.dart';
+import 'package:trip/domain/bookmark.dart';
+import 'package:trip/service/bookmark_service.dart';
 import 'package:trip/service/url_analyzer.dart';
 import 'package:trip/util/global.dart';
 
@@ -9,33 +9,46 @@ import 'package:trip/util/global.dart';
 /// Created by jozuko on 2023/02/17.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class ReceiveShareBloc extends Bloc<ReceiveShareEvent, ReceiveShareState> {
-  ReceiveShareBloc({required String url}) : super(ReceiveShareState(analyzedUrl: AnalyzedUrl(url: url, title: '', description: '', imageUrl: ''))) {
-    on<ReceiveShareUrlEvent>(_onReceiveUrl);
+class ReceiveShareBloc extends Bloc<ReceiveShareBaseEvent, ReceiveShareBaseState> {
+  final _urlAnalyzer = getIt.get<UrlAnalyzer>();
+  final _bookmarkService = getIt.get<BookmarkService>();
 
-    TripLog.d("ReceiveShareBloc::constructor");
+  ReceiveShareBloc({required String url}) : super(ReceiveShareState(bookmark: Bookmark(url: url, title: '', description: '', imageUrl: ''))) {
+    on<ReceiveShareUrlEvent>(_onReceiveUrl);
+    on<ReceiveShareAddBookmarkEvent>(_onAddBookmark);
   }
 
   Future<void> _onReceiveUrl(ReceiveShareUrlEvent event, emit) async {
-    final url = state.analyzedUrl?.url ?? '';
-    if (url.isEmpty) {
-      return;
-    }
+    final state = this.state;
+    if (state is ReceiveShareState) {
+      final url = state.bookmark?.url ?? '';
+      if (url.isEmpty) {
+        emit(ReceiveShareState(isLoading: false));
+        return;
+      }
 
-    final analyzer = getIt.get<UrlAnalyzer>();
-    final analyzedUrl = await analyzer.analyze(url);
-    emit(ReceiveShareState(analyzedUrl: analyzedUrl));
+      final analyzedUrl = await _urlAnalyzer.analyze(url);
+      emit(ReceiveShareState(isLoading: false, bookmark: analyzedUrl));
+    }
+  }
+
+  Future<void> _onAddBookmark(ReceiveShareAddBookmarkEvent event, emit) async {
+    final state = this.state;
+    if (state is ReceiveShareState) {
+      _bookmarkService.add(state.bookmark);
+      emit(ReceiveShareDoneState());
+    }
   }
 }
 
-abstract class ReceiveShareEvent extends Equatable {
+abstract class ReceiveShareBaseEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
 
-class ReceiveShareUrlEvent extends ReceiveShareEvent {}
+class ReceiveShareUrlEvent extends ReceiveShareBaseEvent {}
 
-class ReceiveShareChangeTitleEvent extends ReceiveShareEvent {
+class ReceiveShareChangeTitleEvent extends ReceiveShareBaseEvent {
   final String title;
 
   ReceiveShareChangeTitleEvent({required this.title});
@@ -44,7 +57,7 @@ class ReceiveShareChangeTitleEvent extends ReceiveShareEvent {
   List<Object?> get props => [title];
 }
 
-class ReceiveShareChangeUrlEvent extends ReceiveShareEvent {
+class ReceiveShareChangeUrlEvent extends ReceiveShareBaseEvent {
   final String url;
 
   ReceiveShareChangeUrlEvent({required this.url});
@@ -53,18 +66,27 @@ class ReceiveShareChangeUrlEvent extends ReceiveShareEvent {
   List<Object?> get props => [url];
 }
 
-class ReceiveShareState extends Equatable {
-  final bool isLoading;
-  final AnalyzedUrl? analyzedUrl;
+class ReceiveShareAddBookmarkEvent extends ReceiveShareBaseEvent {}
 
-  const ReceiveShareState({
-    this.isLoading = false,
-    this.analyzedUrl,
+abstract class ReceiveShareBaseState extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
+
+class ReceiveShareState extends ReceiveShareBaseState {
+  final bool isLoading;
+  final Bookmark? bookmark;
+
+  ReceiveShareState({
+    this.isLoading = true,
+    this.bookmark,
   });
 
   @override
   List<Object?> get props => [
         isLoading,
-        analyzedUrl,
+        bookmark,
       ];
 }
+
+class ReceiveShareDoneState extends ReceiveShareBaseState {}

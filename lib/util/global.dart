@@ -10,6 +10,8 @@ class Global {
   Global._();
 }
 
+const String appName = '旅行プラン作成';
+
 bool get isRelease => const bool.fromEnvironment('dart.vm.product');
 
 GetIt get getIt => DI.getIt;

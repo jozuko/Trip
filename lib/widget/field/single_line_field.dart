@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/string_ex.dart';
 
@@ -46,7 +45,6 @@ class _SingleLineFieldState extends State<SingleLineField> {
 
   @override
   Widget build(BuildContext context) {
-    TripLog.d("SingleTextField::build label:${widget.labelText}, initialValue:${widget.value}");
     _inputController.text = widget.value ?? '';
 
     return Container(

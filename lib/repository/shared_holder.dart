@@ -7,6 +7,7 @@ import 'package:trip/service/auth_service.dart';
 ///
 enum Key {
   authProvider,
+  bookmarks,
 }
 
 class SharedHolder {
@@ -19,4 +20,8 @@ class SharedHolder {
   AuthProvider get authProvider => AuthProvider.values[_prefs.getInt(Key.authProvider.name) ?? 0];
 
   set authProvider(AuthProvider provider) => _prefs.setInt(Key.authProvider.name, provider.index);
+
+  String get bookmarks => _prefs.getString(Key.bookmarks.name) ?? '';
+
+  set bookmarks(String json) => _prefs.setString(Key.bookmarks.name, json);
 }

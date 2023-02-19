@@ -24,16 +24,10 @@ class AuthService {
 
   AuthProvider get authProvider => sharedHolder.authProvider;
 
-  void initialize() {
-    _auth.userChanges().listen(onChangeUser);
-  }
-
-  void onChangeUser(User? user) {
-    if (user == null) {
-      TripLog.i('AuthService::onChangeAuthState user signed out');
-    } else {
-      TripLog.i('AuthService::onChangeAuthState user signed in');
-    }
+  void initialize(void Function(User? user)? callback) {
+    _auth.userChanges().listen((user) {
+      callback?.call(user);
+    });
   }
 
   Future<AuthResultMail> authWithMail(String email, String password) async {

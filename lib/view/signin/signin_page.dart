@@ -68,7 +68,7 @@ class _SignInState extends BaseState<SignInPage> {
   }
 
   Widget _buildTitleBar() {
-    return const TitleBar(title: '旅行プラン作成アプリ');
+    return const TitleBar();
   }
 
   void _onTapEmail() {
