@@ -20,4 +20,9 @@ class BookmarkService {
     bookmarks.add(bookmark);
     sharedHolder.bookmarks = bookmarks.jsonString;
   }
+
+  List<Bookmark> getAll() {
+    final bookmarksJson = sharedHolder.bookmarks;
+    return BookmarkList.fromJsonString(bookmarksJson);
+  }
 }

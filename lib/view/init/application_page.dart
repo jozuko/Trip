@@ -4,6 +4,7 @@ import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
+import 'package:trip/view/main/home_bloc.dart';
 import 'package:trip/view/main/home_page.dart';
 import 'package:trip/view/receive_share/receive_share_bloc.dart';
 import 'package:trip/view/receive_share/receive_share_page.dart';
@@ -55,7 +56,10 @@ class _ApplicationState extends State<ApplicationPage> {
         } else {
           if (state.initialized) {
             if (state.signedIn) {
-              child = const HomePage();
+              child = BlocProvider(
+                create: (context) => HomeBloc(),
+                child: const HomePage(),
+              );
             } else {
               child = BlocProvider(
                 create: (context) => SignInBloc(),
