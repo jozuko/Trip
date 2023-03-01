@@ -1,9 +1,11 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/home_bloc.dart';
+import 'package:trip/widget/button/square_icon_button.dart';
+import 'package:trip/widget/title_bar.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
@@ -28,28 +30,46 @@ class _HomeState extends BaseState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeBloc, HomeState>(builder: (context, state) {
-      final children = <Widget>[];
-      for (var bookmark in state.bookmarks) {
-        children.add(
-          Text(bookmark.title),
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            _buildTitle(),
+            Padding(
+              padding: const EdgeInsets.all(margin),
+              child: Column(
+                children: [
+                  _buildListTitle(),
+                ],
+              ),
+            ),
+          ],
         );
-      }
+      },
+    );
+  }
 
-      return Column(
-        children: children,
-      );
+  Widget _buildTitle() {
+    return TitleBar(
+      rightButton: Icons.settings_outlined,
+      onTapRightIcon: _onTapSettings,
+    );
+  }
 
-      const Center(
-        child: Text(
-          'HomePage',
-          style: TextStyle(
-            color: TColors.blackText,
-            fontSize: fontSize1,
-            fontWeight: FontWeight.bold,
-          ),
+  Widget _buildListTitle() {
+    return Row(
+      children: [
+        Text('計画一覧', style: TextStyleEx.normalStyle(isBold: true)),
+        const Spacer(),
+        SquareIconButton.transparent(
+          Icons.add_circle_outline_rounded,
+          onPressed: () {},
         ),
-      );
-    });
+      ],
+    );
+  }
+
+  void _onTapSettings() {
+    // TODO open settings
   }
 }

@@ -10,7 +10,7 @@ class Global {
   Global._();
 }
 
-const String appName = '旅行プラン作成';
+const String appName = '旅行計画を作ろう';
 
 bool get isRelease => const bool.fromEnvironment('dart.vm.product');
 
@@ -18,11 +18,5 @@ GetIt get getIt => DI.getIt;
 
 const double margin = 20.0;
 const double marginS = 10.0;
-
-const double fontSize1 = 22.0;
-const double fontSize2 = 20.0;
-const double fontSize3 = 18.0;
-const double fontSize4 = 16.0;
-const double fontSize5 = 14.0;
 
 typedef ChangeUserCallback = void Function(User? user);

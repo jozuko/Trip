@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/string_ex.dart';
+import 'package:trip/util/text_style_ex.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
@@ -65,7 +66,7 @@ class _SingleLineFieldState extends State<SingleLineField> {
           hintText: widget.hintText,
           labelText: widget.labelText,
           errorText: widget.errorText.emptyToNull,
-          labelStyle: const TextStyle(color: TColors.blackText, fontWeight: FontWeight.bold),
+          labelStyle: TextStyleEx.normalStyle(isBold: true),
           enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
           focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
         ),

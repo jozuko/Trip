@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/signin/singin_mail_bloc.dart';
-import 'package:trip/widget/button/square_rounded_button.dart';
+import 'package:trip/widget/button/square_text_button.dart';
 import 'package:trip/widget/field/email_field.dart';
 import 'package:trip/widget/field/password_field.dart';
 import 'package:trip/widget/loading.dart';
@@ -48,63 +47,47 @@ class _SignInMailState extends BaseState<SignInMailPage> {
             body: SafeArea(
               child: Stack(
                 children: [
-                  Container(
-                    //color: TColors.appBack,
-                    child: Column(
-                      children: [
-                        _buildTitleBar(),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.all(margin),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  EmailField(
-                                    value: state.email,
-                                    errorText: state.errorEmail,
-                                    textInputAction: TextInputAction.next,
+                  Column(
+                    children: [
+                      _buildTitleBar(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(margin),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                EmailField(
+                                  value: state.email,
+                                  errorText: state.errorEmail,
+                                  textInputAction: TextInputAction.next,
+                                  onChanged: (value) {
+                                    context.read<SignInMailBloc>().add(SignInMailEmailChangedEvent(email: value));
+                                  },
+                                ),
+                                const SizedBox(height: margin),
+                                PasswordField(
+                                    labelText: 'パスワード',
+                                    obscureText: state.obscurePassword,
+                                    initialValue: state.password,
+                                    errorText: state.errorPassword,
+                                    textInputAction: TextInputAction.done,
                                     onChanged: (value) {
-                                      context.read<SignInMailBloc>().add(SignInMailEmailChangedEvent(email: value));
+                                      context.read<SignInMailBloc>().add(SignInMailPasswordChangedEvent(password: value));
                                     },
-                                  ),
-                                  const SizedBox(height: margin),
-                                  PasswordField(
-                                      labelText: 'パスワード',
-                                      obscureText: state.obscurePassword,
-                                      initialValue: state.password,
-                                      errorText: state.errorPassword,
-                                      textInputAction: TextInputAction.done,
-                                      onChanged: (value) {
-                                        context.read<SignInMailBloc>().add(SignInMailPasswordChangedEvent(password: value));
-                                      },
-                                      onPressIcon: () {
-                                        context.read<SignInMailBloc>().add(SignInMailPasswordChangeObscureEvent());
-                                      }),
-                                ],
-                              ),
+                                    onPressIcon: () {
+                                      context.read<SignInMailBloc>().add(SignInMailPasswordChangeObscureEvent());
+                                    }),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: margin),
-                        SquareRoundedButton(
-                          width: 290,
-                          height: 40,
-                          backgroundColor: TColors.blackButtonBack,
-                          inkColor: TColors.blackButtonInk,
-                          showBarrier: false,
-                          showBorder: false,
-                          onPressed: _onClickSignIn,
-                          child: const Center(
-                            child: Text(
-                              'ログイン',
-                              style: TextStyle(color: TColors.blackButtonText, fontSize: fontSize3, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: margin),
-                      ],
-                    ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(margin),
+                        child: SquareTextButton.blackButton('ログイン', onPressed: _onClickSignIn),
+                      ),
+                    ],
                   ),
                   LoadingWidget(visible: state.isLoading),
                 ],
@@ -117,7 +100,13 @@ class _SignInMailState extends BaseState<SignInMailPage> {
   }
 
   Widget _buildTitleBar() {
-    return const TitleBar(title: 'メールアドレス認証');
+    return TitleBar(
+      title: 'メールアドレス認証',
+      isBack: true,
+      onTapLeadingIcon: () {
+        Navigator.pop(context);
+      },
+    );
   }
 
   void _onClickSignIn() {

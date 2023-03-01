@@ -71,7 +71,7 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
     if (Platform.isAndroid) {
       return TitleBar(
         title: 'URLを追加',
-        leadingIcon: Icons.arrow_back_ios,
+        isBack: true,
         onTapLeadingIcon: _onPressedBack,
         rightButton: Icons.send,
         onTapRightIcon: _onPressedAdd,

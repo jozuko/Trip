@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/string_ex.dart';
+import 'package:trip/util/text_style_ex.dart';
 
 ///
 /// password field
@@ -73,7 +74,7 @@ class _LoginPasswordState extends State<PasswordField> {
         decoration: InputDecoration(
           labelText: widget.labelText,
           errorText: widget.errorText.emptyToNull,
-          labelStyle: const TextStyle(color: TColors.blackText, fontWeight: FontWeight.bold),
+          labelStyle: TextStyleEx.normalStyle(isBold: true),
           enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
           focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
           suffixIcon: IconButton(

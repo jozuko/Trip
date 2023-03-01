@@ -1,13 +1,16 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/util/text_style_ex.dart';
+import 'package:trip/widget/button/square_icon_button.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class TitleBar extends StatelessWidget {
-  static const _titleSize = 18.0;
+  static const _defaultHeight = 60.0;
+
   final String title;
   final IconData? leadingIcon;
   final Color leadingIconColor = TColors.titleForeground;
@@ -18,11 +21,11 @@ class TitleBar extends StatelessWidget {
   const TitleBar({
     super.key,
     this.title = appName,
-    this.leadingIcon,
+    bool isBack = false,
     this.onTapLeadingIcon,
     this.rightButton,
     this.onTapRightIcon,
-  });
+  }) : leadingIcon = isBack ? Icons.arrow_back_ios_new_rounded : null;
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +56,7 @@ class TitleBar extends StatelessWidget {
   Widget _buildTitle() {
     return Text(
       title,
-      style: const TextStyle(
-        color: TColors.titleForeground,
-        fontSize: _titleSize,
-        fontWeight: FontWeight.normal,
-      ),
+      style: TextStyleEx.titleStyle(),
     );
   }
 
@@ -67,22 +66,15 @@ class TitleBar extends StatelessWidget {
       return null;
     }
 
-    final iconWidget = Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 20.0),
-      child: Icon(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SquareIconButton.transparent(
         leadingIcon,
-        size: 40.0,
-        color: leadingIconColor,
+        size: _defaultHeight - marginS,
+        iconColor: leadingIconColor,
+        onPressed: onTapLeadingIcon,
       ),
     );
-    if (onTapLeadingIcon == null) {
-      return iconWidget;
-    } else {
-      return GestureDetector(
-        onTap: onTapLeadingIcon,
-        child: iconWidget,
-      );
-    }
   }
 
   Widget? _buildRightIcon() {
@@ -91,24 +83,14 @@ class TitleBar extends StatelessWidget {
       return null;
     }
 
-    final iconWidget = Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 20.0),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Icon(
-          rightButton,
-          size: 40.0,
-          color: leadingIconColor,
-        ),
+    return Align(
+      alignment: Alignment.centerRight,
+      child: SquareIconButton.transparent(
+        rightButton,
+        size: _defaultHeight - marginS,
+        iconColor: leadingIconColor,
+        onPressed: onTapRightIcon,
       ),
     );
-    if (onTapRightIcon == null) {
-      return iconWidget;
-    } else {
-      return GestureDetector(
-        onTap: onTapRightIcon,
-        child: iconWidget,
-      );
-    }
   }
 }

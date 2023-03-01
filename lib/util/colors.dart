@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 class TColors {
   TColors._();
 
+  static const Color transparent = Colors.transparent;
+
   static const Color black = Color(0xFF333333);
   static const Color black25 = Color(0x40333333);
   static const Color black50 = Color(0xF7333333);
@@ -41,5 +43,5 @@ class TColors {
   static const Color whiteButtonBarrierText = white;
 
   static const Color titleBackground = Color(0xFFF7F7F7);
-  static const Color titleForeground = Color(0xFF6E6E6E);
+  static const Color titleForeground = darkGray;
 }
