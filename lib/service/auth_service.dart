@@ -46,14 +46,19 @@ class AuthService {
     }
 
     await _auth.signOut();
+
+    sharedHolder.userId = null;
   }
 
   Future<AuthResultMail> _signInWithEmailAndPassword(String email, String password) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      if (userCredential.user != null) {
+      final authUser = userCredential.user;
+      if (authUser != null) {
         TripLog.i('AuthService::signInWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultMail.success;
       } else {
         TripLog.i('AuthService::signInWithEmailAndPassword failed.');
@@ -82,9 +87,12 @@ class AuthService {
         email: email,
         password: password,
       );
-      if (userCredential.user != null) {
+      final authUser = userCredential.user;
+      if (authUser != null) {
         TripLog.i('AuthService::createUserWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultMail.success;
       } else {
         TripLog.e('AuthService::createUserWithEmailAndPassword failed.');
@@ -123,12 +131,15 @@ class AuthService {
     // Once signed in, return the UserCredential
     try {
       final userCredential = await _auth.signInWithCredential(credential);
-      if (userCredential.user == null) {
+      final authUser = userCredential.user;
+      if (authUser == null) {
         TripLog.e('AuthService::authWithGoogle failed.');
         return AuthResultThirdParty.failed;
       } else {
         TripLog.i('AuthService::authWithGoogle success');
         sharedHolder.authProvider = AuthProvider.google;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultThirdParty.success;
       }
     } catch (e) {
@@ -147,13 +158,15 @@ class AuthService {
       } else {
         userCredential = await _auth.signInWithProvider(appleProvider);
       }
-
-      if (userCredential.user == null) {
+      final authUser = userCredential.user;
+      if (authUser == null) {
         TripLog.e('AuthService::authWithApple failed.');
         return AuthResultThirdParty.failed;
       } else {
         TripLog.i('AuthService::authWithApple success');
         sharedHolder.authProvider = AuthProvider.apple;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultThirdParty.success;
       }
     } catch (e) {
