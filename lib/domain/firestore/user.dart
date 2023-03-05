@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:trip/domain/firestore/firestore_convertor.dart';
+import 'package:trip/domain/firestore/time.dart';
 import 'package:trip/util/global.dart';
 
 ///
@@ -9,7 +11,7 @@ import 'package:trip/util/global.dart';
 class User extends Equatable {
   final String id;
   final String nickname;
-  final int updatedAt;
+  final Time updatedAt;
 
   const User({
     required this.id,
@@ -22,21 +24,17 @@ class User extends Equatable {
     SnapshotOptions? options,
   ) {
     final data = snapshot.data();
-
-    final updatedAtTimestamp = data?["updatedAt"];
-    final int updatedAt = updatedAtTimestamp != null ? (updatedAtTimestamp as Timestamp).seconds : 0;
-
     return User(
       id: snapshot.id,
-      nickname: data?['nickname'] ?? "",
-      updatedAt: updatedAt,
+      nickname: FirestoreConvertor.toNonNullString(data?['nickname'], ""),
+      updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }
 
   Map<String, Object?> toFirestore() {
     return {
       "nickname": nickname,
-      "updatedAt": FieldValue.serverTimestamp(),
+      "updatedAt": updatedAt.toFirestore(),
     };
   }
 

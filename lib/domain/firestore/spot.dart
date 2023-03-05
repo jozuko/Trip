@@ -1,5 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:trip/domain/firestore/firestore_convertor.dart';
+import 'package:trip/domain/firestore/location.dart';
+import 'package:trip/domain/firestore/open_time.dart';
+import 'package:trip/domain/firestore/time.dart';
+import 'package:trip/domain/spot-type.dart';
+import 'package:trip/repository/log/trip_logger.dart';
 
 ///
 /// Created by jozuko on 2023/03/01.
@@ -7,16 +13,16 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 ///
 class Spot extends Equatable {
   final String docId;
-  final int spot;
+  final SpotType spot;
   final String? name;
   final String? phone;
   final String? address;
   final String? url;
-  final LatLng? location;
-  final List<Map<String, String>> openTime;
-  final int updatedAt;
+  final Location? location;
+  final OpenTimes openTimes;
+  final Time updatedAt;
 
-  Spot({
+  const Spot({
     required this.docId,
     required this.spot,
     this.name,
@@ -24,10 +30,76 @@ class Spot extends Equatable {
     this.address,
     this.url,
     this.location,
-    required this.openTime,
+    required this.openTimes,
     required this.updatedAt,
   });
 
+  factory Spot.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+
+    Location? locationGeo;
+    try {
+      locationGeo = Location.fromFirestore(data?["location"]);
+    } catch (e) {
+      TripLog.e("Spot.fromFirestore LocationError $e");
+    }
+
+    return Spot(
+      docId: snapshot.id,
+      spot: SpotTypeEx.fromFirestore(data?["spot"]),
+      name: FirestoreConvertor.toNullableString(data?["name"]),
+      phone: FirestoreConvertor.toNullableString(data?["phone"]),
+      address: FirestoreConvertor.toNullableString(data?["address"]),
+      url: FirestoreConvertor.toNullableString(data?["url"]),
+      location: locationGeo,
+      openTimes: OpenTimes.fromFirestore(data?["openTime"]),
+      updatedAt: Time.fromFirestore(data?["updatedAt"]),
+    );
+  }
+
+  Map<String, Object?> toFirestore() {
+    return {
+      "spot": spot.toFirestore(),
+      "name": name,
+      "phone": phone,
+      "address": address,
+      "url": url,
+      "location": location?.toFirestore(),
+      "openTimes": openTimes.toFirestore(),
+      "updatedAt": updatedAt.toFirestore(),
+    };
+  }
+
   @override
-  List<Object> get props => [];
+  List<Object> get props => [
+        docId,
+        spot,
+        name ?? "",
+        phone ?? "",
+        address ?? "",
+        url ?? "",
+        location?.latitude ?? 0,
+        location?.longitude ?? 0,
+        openTimes,
+        updatedAt,
+      ];
+
+  @override
+  String toString() {
+    return "["
+        'docId: $docId,'
+        'spot: $spot,'
+        'name: ${name ?? ""},'
+        'phone: ${phone ?? ""},'
+        'address: ${address ?? ""},'
+        'url: ${url ?? ""},'
+        'location: ${location?.latitude ?? 0},'
+        'location: ${location?.longitude ?? 0},'
+        'openTime: $openTimes,'
+        'updatedAt: $updatedAt'
+        ']';
+  }
 }
