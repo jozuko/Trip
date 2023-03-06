@@ -12,6 +12,10 @@ class Time extends Equatable {
     required this.seconds,
   });
 
+  factory Time.current() {
+    return Time(seconds: (DateTime.now().millisecondsSinceEpoch ~/ 1000).toInt());
+  }
+
   factory Time.fromFirestore(dynamic data) {
     if (data == null) {
       return const Time(seconds: null);
@@ -23,11 +27,7 @@ class Time extends Equatable {
   }
 
   dynamic toFirestore() {
-    final seconds = this.seconds;
-    if (seconds == null) {
-      return FieldValue.serverTimestamp();
-    }
-    return Timestamp(seconds, 0);
+    return FieldValue.serverTimestamp();
   }
 
   @override

@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/service/auth_service.dart';
+import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/spot_service.dart';
+import 'package:trip/service/user_service.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/util/string_ex.dart';
 
@@ -18,6 +21,7 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
 
   ApplicationBloc() : super(const ApplicationState(isLoading: true, initialized: false, signedIn: false)) {
     on<ApplicationInitEvent>(_onInit);
+    on<ApplicationInitDoneEvent>(_onDoneInit);
     on<ApplicationCheckAuthEvent>(_onCheckAuth);
     on<ApplicationReceiveSharedEvent>(_onReceiveShared);
   }
@@ -27,6 +31,7 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
   }
 
   Future<void> _onInit(ApplicationInitEvent event, Emitter<ApplicationState> emit) async {
+    // ブラウザからの共有処理
     _intentDataStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String value) {
       TripLog.d("ApplicationBloc::getTextStream value:$value");
       add(ApplicationReceiveSharedEvent(value: value));
@@ -34,6 +39,7 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
       TripLog.e("ApplicationBloc::getTextStream error: $e");
     });
 
+    // ブラウザからの共有処理2
     ReceiveSharingIntent.getInitialText().then((String? value) {
       if (value.nullToEmpty.isNotEmpty) {
         TripLog.d("ApplicationBloc::getInitialText value:$value");
@@ -41,9 +47,22 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
       }
     });
 
-    _authService.initialize((user) {
-      emit(state.copyWith(initialized: true, signedIn: user != null));
+    // ログイン
+    _authService.initialize((user) async {
+      if (user != null) {
+        await getIt.get<UserService>().initUser();
+        await getIt.get<SpotService>().initSpots();
+        await getIt.get<PlanService>().initPlans();
+
+        add(ApplicationInitDoneEvent(signedIn: true));
+      } else {
+        add(ApplicationInitDoneEvent(signedIn: false));
+      }
     });
+  }
+
+  void _onDoneInit(ApplicationInitDoneEvent event, emit) {
+    emit(state.copyWith(initialized: true, signedIn: event.signedIn));
   }
 
   void _onReceiveShared(ApplicationReceiveSharedEvent event, emit) {
@@ -67,6 +86,15 @@ abstract class ApplicationEvent extends Equatable {
 }
 
 class ApplicationInitEvent extends ApplicationEvent {}
+
+class ApplicationInitDoneEvent extends ApplicationEvent {
+  final bool signedIn;
+
+  ApplicationInitDoneEvent({required this.signedIn});
+
+  @override
+  List<Object?> get props => [signedIn];
+}
 
 class ApplicationCheckAuthEvent extends ApplicationEvent {}
 
@@ -118,9 +146,10 @@ class ApplicationState extends Equatable {
 
   @override
   String toString() {
-    return 'isLoading:$isLoading, '
+    return ''
+        'isLoading:$isLoading, '
         'initialized:$initialized, '
         'signedIn:$signedIn, '
-        'sharedText:$sharedText';
+        'sharedText:$sharedText, ';
   }
 }

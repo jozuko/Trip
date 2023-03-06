@@ -40,7 +40,7 @@ class OpenTimes extends Equatable {
 
   @override
   String toString() {
-    return '[${openTimes.join()}]';
+    return '[${openTimes.join(",")}]';
   }
 }
 

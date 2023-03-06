@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/repository/shared_holder.dart';
+import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/spot_service.dart';
+import 'package:trip/service/user_service.dart';
 import 'package:trip/util/global.dart';
 
 ///
@@ -46,7 +49,9 @@ class AuthService {
     }
 
     await _auth.signOut();
-
+    getIt.get<UserService>().dispose();
+    getIt.get<SpotService>().dispose();
+    getIt.get<PlanService>().dispose();
     sharedHolder.userId = null;
   }
 

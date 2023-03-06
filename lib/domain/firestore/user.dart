@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:trip/domain/firestore/firestore_convertor.dart';
+import 'package:trip/domain/firestore/firestore_converter.dart';
 import 'package:trip/domain/firestore/time.dart';
 import 'package:trip/util/global.dart';
 
@@ -19,6 +19,13 @@ class User extends Equatable {
     required this.updatedAt,
   });
 
+  factory User.create(String? id) {
+    if (id == null) {
+      throw "cannot create user. userId is null";
+    }
+    return User(id: id, nickname: '', updatedAt: Time.current());
+  }
+
   factory User.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
@@ -26,7 +33,7 @@ class User extends Equatable {
     final data = snapshot.data();
     return User(
       id: snapshot.id,
-      nickname: FirestoreConvertor.toNonNullString(data?['nickname'], ""),
+      nickname: FirestoreConverter.toNonNullString(data?['nickname'], ""),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

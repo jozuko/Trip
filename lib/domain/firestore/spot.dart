@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:trip/domain/firestore/firestore_convertor.dart';
+import 'package:trip/domain/firestore/firestore_converter.dart';
 import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/open_time.dart';
 import 'package:trip/domain/firestore/time.dart';
-import 'package:trip/domain/spot-type.dart';
+import 'package:trip/domain/spot_type.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 
 ///
@@ -50,10 +50,10 @@ class Spot extends Equatable {
     return Spot(
       docId: snapshot.id,
       spot: SpotTypeEx.fromFirestore(data?["spot"]),
-      name: FirestoreConvertor.toNullableString(data?["name"]),
-      phone: FirestoreConvertor.toNullableString(data?["phone"]),
-      address: FirestoreConvertor.toNullableString(data?["address"]),
-      url: FirestoreConvertor.toNullableString(data?["url"]),
+      name: FirestoreConverter.toNullableString(data?["name"]),
+      phone: FirestoreConverter.toNullableString(data?["phone"]),
+      address: FirestoreConverter.toNullableString(data?["address"]),
+      url: FirestoreConverter.toNullableString(data?["url"]),
       location: locationGeo,
       openTimes: OpenTimes.fromFirestore(data?["openTime"]),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
@@ -81,8 +81,7 @@ class Spot extends Equatable {
         phone ?? "",
         address ?? "",
         url ?? "",
-        location?.latitude ?? 0,
-        location?.longitude ?? 0,
+        location ?? 0,
         openTimes,
         updatedAt,
       ];
@@ -90,16 +89,15 @@ class Spot extends Equatable {
   @override
   String toString() {
     return "["
-        'docId: $docId,'
-        'spot: $spot,'
-        'name: ${name ?? ""},'
-        'phone: ${phone ?? ""},'
-        'address: ${address ?? ""},'
-        'url: ${url ?? ""},'
-        'location: ${location?.latitude ?? 0},'
-        'location: ${location?.longitude ?? 0},'
-        'openTime: $openTimes,'
-        'updatedAt: $updatedAt'
+        'docId: $docId, '
+        'spot: $spot, '
+        'name: ${name ?? ""}, '
+        'phone: ${phone ?? ""}, '
+        'address: ${address ?? ""}, '
+        'url: ${url ?? ""}, '
+        'location: $location '
+        'openTime: $openTimes, '
+        'updatedAt: $updatedAt '
         ']';
   }
 }
