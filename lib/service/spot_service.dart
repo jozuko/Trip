@@ -26,6 +26,10 @@ class SpotService {
     _spotListener = _firestoreClient.addSpotListener(onAdded: _onAdded, onModified: _onModified, onRemoved: _onRemoved, onError: _onError);
   }
 
+  List<Spot> getSpot() {
+    return _spots;
+  }
+
   void _onAdded(DocumentSnapshot<Spot> spotSnapshot) {
     final spot = spotSnapshot.data();
     if (spot == null) {

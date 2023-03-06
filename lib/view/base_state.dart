@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trip/util/colors.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
 import 'package:trip/widget/dialog/default_dialog.dart';
 
@@ -25,5 +26,19 @@ abstract class BaseState<T extends StatefulWidget> extends State<T> {
     ).then((value) {
       callback?.call();
     });
+  }
+
+  Widget buildRootPage({required Widget child}) {
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        body: Container(
+          color: TColors.appBack,
+          child: SafeArea(
+            child: child,
+          ),
+        ),
+      ),
+    );
   }
 }

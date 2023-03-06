@@ -4,6 +4,7 @@ import 'package:trip/util/global.dart';
 import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/home_bloc.dart';
+import 'package:trip/view/main/settings_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/title_bar.dart';
 
@@ -12,6 +13,13 @@ import 'package:trip/widget/title_bar.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class HomePage extends StatefulWidget {
+  static Widget newPage({Key? key}) {
+    return BlocProvider(
+      create: (context) => HomeBloc(),
+      child: HomePage(key: key),
+    );
+  }
+
   const HomePage({super.key});
 
   @override
@@ -70,6 +78,6 @@ class _HomeState extends BaseState<HomePage> {
   }
 
   void _onTapSettings() {
-    // TODO open settings
+    Navigator.of(context).push(SettingsPage.routePage());
   }
 }

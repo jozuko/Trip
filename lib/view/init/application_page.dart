@@ -4,12 +4,10 @@ import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
-import 'package:trip/view/main/home_bloc.dart';
 import 'package:trip/view/main/home_page.dart';
 import 'package:trip/view/receive_share/receive_share_bloc.dart';
 import 'package:trip/view/receive_share/receive_share_page.dart';
 import 'package:trip/view/signin/signin_page.dart';
-import 'package:trip/view/signin/singin_bloc.dart';
 
 ///
 /// Created by jozuko on 2023/02/16.
@@ -56,18 +54,12 @@ class _ApplicationState extends State<ApplicationPage> {
         } else {
           if (state.initialized) {
             if (state.signedIn) {
-              child = BlocProvider(
-                create: (context) => HomeBloc(),
-                child: const HomePage(),
-              );
+              child = HomePage.newPage();
             } else {
-              child = BlocProvider(
-                create: (context) => SignInBloc(),
-                child: const SignInPage(),
-              );
+              child = SignInPage.newPage();
             }
           } else {
-            child = const InitPage();
+            child = InitPage.newPage();
           }
         }
 

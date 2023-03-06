@@ -6,9 +6,9 @@ import 'package:sign_in_button/sign_in_button.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/init/application_bloc.dart';
-import 'package:trip/view/signin/singin_bloc.dart';
-import 'package:trip/view/signin/singin_mail_bloc.dart';
-import 'package:trip/view/signin/singin_mail_page.dart';
+import 'package:trip/view/signin/signin_bloc.dart';
+import 'package:trip/view/signin/signin_mail_bloc.dart';
+import 'package:trip/view/signin/signin_mail_page.dart';
 import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
@@ -17,6 +17,13 @@ import 'package:trip/widget/title_bar.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class SignInPage extends StatefulWidget {
+  static Widget newPage({Key? key}) {
+    return BlocProvider(
+      create: (context) => SignInBloc(),
+      child: SignInPage(key: key),
+    );
+  }
+
   const SignInPage({super.key});
 
   @override
@@ -72,14 +79,7 @@ class _SignInState extends BaseState<SignInPage> {
   }
 
   void _onTapEmail() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => SignInMailBloc(),
-          child: const SignInMailPage(),
-        ),
-      ),
-    );
+    Navigator.of(context).push(SignInMailPage.routePage());
   }
 
   void _onTapGoogle() {

@@ -6,6 +6,10 @@ import 'package:trip/widget/title_bar.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class InitPage extends StatelessWidget {
+  static Widget newPage({Key? key}) {
+    return InitPage(key: key);
+  }
+
   const InitPage({super.key});
 
   @override
