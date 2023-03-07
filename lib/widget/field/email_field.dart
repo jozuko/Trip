@@ -9,7 +9,7 @@ class EmailField extends SingleLineField {
     super.key,
     super.labelText = 'メールアドレス',
     super.hintText = 'aaa@bbb.com',
-    super.value,
+    super.controller,
     super.textInputType,
     super.textInputAction,
     super.errorText,

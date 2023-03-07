@@ -32,6 +32,8 @@ class Location extends Equatable {
     return GeoPoint(latitude, longitude);
   }
 
+  String get label => "$latitude,$longitude";
+
   @override
   List<Object?> get props => [
         latitude,

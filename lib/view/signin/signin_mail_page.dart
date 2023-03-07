@@ -66,8 +66,8 @@ class _SignInMailState extends BaseState<SignInMailPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               EmailField(
-                                value: state.email,
                                 errorText: state.errorEmail,
+                                textInputType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 onChanged: (value) {
                                   context.read<SignInMailBloc>().add(SignInMailEmailChangedEvent(email: value));
@@ -77,7 +77,6 @@ class _SignInMailState extends BaseState<SignInMailPage> {
                               PasswordField(
                                   labelText: 'パスワード',
                                   obscureText: state.obscurePassword,
-                                  initialValue: state.password,
                                   errorText: state.errorPassword,
                                   textInputAction: TextInputAction.done,
                                   onChanged: (value) {
@@ -93,7 +92,7 @@ class _SignInMailState extends BaseState<SignInMailPage> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(margin),
-                      child: SquareTextButton.blackButton('ログイン', onPressed: _onClickSignIn),
+                      child: SquareWidgetButton.blackButton('ログイン', onPressed: _onClickSignIn),
                     ),
                   ],
                 ),

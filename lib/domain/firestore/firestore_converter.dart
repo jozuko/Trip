@@ -23,6 +23,26 @@ class FirestoreConverter {
     return data;
   }
 
+  static int toNonNullInt(dynamic data, [int defaultValue = 0]) {
+    if (data == null) {
+      return defaultValue;
+    }
+
+    if (data is int) {
+      return data;
+    }
+
+    if (data is double) {
+      return data.toInt();
+    }
+
+    if (data is String) {
+      return int.tryParse(data) ?? defaultValue;
+    }
+
+    return defaultValue;
+  }
+
   static List<String> toStringList(dynamic data) {
     if (data == null) {
       return [];

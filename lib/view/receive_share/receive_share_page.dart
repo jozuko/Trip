@@ -26,11 +26,21 @@ class ReceiveSharePage extends StatefulWidget {
 }
 
 class _ReceiveShareState extends BaseState<ReceiveSharePage> {
+  final _titleController = TextEditingController();
+  final _urlController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     TripLog.d('_ReceiveShareState::initState call analyze');
-    BlocProvider.of<ReceiveShareBloc>(context).add(ReceiveShareUrlEvent());
+    BlocProvider.of<ReceiveShareBloc>(context).add(ReceiveShareInitEvent());
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _urlController.dispose();
+    super.dispose();
   }
 
   @override
@@ -86,12 +96,20 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   }
 
   Widget _buildContents(ReceiveShareState state) {
+    if (!state.initialized) {
+      _titleController.text = state.bookmark.title;
+      _titleController.value = _titleController.value.copyWith(selection: TextSelection(baseOffset: state.bookmark.title.length, extentOffset: state.bookmark.title.length));
+
+      _urlController.text = state.bookmark.url;
+      _urlController.value = _urlController.value.copyWith(selection: TextSelection(baseOffset: state.bookmark.url.length, extentOffset: state.bookmark.url.length));
+    }
+
     return Column(
       children: [
         SingleLineField(
           labelText: 'タイトル',
           hintText: 'ブックマークタイトル',
-          value: state.bookmark?.title,
+          controller: _titleController,
           textInputType: TextInputType.text,
           textInputAction: TextInputAction.next,
           onChanged: (value) {
@@ -101,7 +119,7 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
         SingleLineField(
           labelText: 'URL',
           hintText: 'https://***',
-          value: state.bookmark?.url,
+          controller: _urlController,
           textInputType: TextInputType.text,
           textInputAction: TextInputAction.next,
           onChanged: (value) {

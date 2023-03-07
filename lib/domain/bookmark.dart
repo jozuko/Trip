@@ -20,6 +20,15 @@ class Bookmark extends Equatable {
     required this.imageUrl,
   });
 
+  factory Bookmark.empty() {
+    return const Bookmark(
+      url: "",
+      title: "",
+      description: "",
+      imageUrl: "",
+    );
+  }
+
   factory Bookmark.fromJsonMap(Map<String, dynamic> jsonMap) {
     return Bookmark(
       url: JsonModel.stringValue(jsonMap['url']),

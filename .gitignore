@@ -137,3 +137,4 @@ app.*.symbols
 /ios/firebase_app_id_file.json
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
+/画像/

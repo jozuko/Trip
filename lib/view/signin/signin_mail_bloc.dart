@@ -80,7 +80,7 @@ class SignInMailBloc extends Bloc<SignInMailEvent, SignInMailState> {
       case AuthResultMail.userNotFound:
       case AuthResultMail.wrongPassword:
       case AuthResultMail.failed:
-        emit(state.copyWith(errorPassword: 'ログインできませんでした。\nメールアドレスとパスワードをご確認の上、通信環境の良いところで再度お試しください。'));
+        emit(state.copyWith(message: 'ログインできませんでした。\nメールアドレスとパスワードをご確認の上、通信環境の良いところで再度お試しください。'));
         break;
     }
   }

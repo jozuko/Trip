@@ -4,6 +4,7 @@ import 'package:trip/domain/firestore/spot.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
+import 'package:trip/view/main/spot_edit_page.dart';
 import 'package:trip/view/main/spot_list_bloc.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/title_bar.dart';
@@ -85,7 +86,7 @@ class _SpotListState extends BaseState<SpotListPage> {
         const Spacer(),
         SquareIconButton.transparent(
           Icons.add_circle_outline_rounded,
-          onPressed: () {},
+          onPressed: _onPressAdd,
         ),
       ],
     );
@@ -97,5 +98,9 @@ class _SpotListState extends BaseState<SpotListPage> {
 
   void _onBackPress() {
     Navigator.pop(context);
+  }
+
+  void _onPressAdd() {
+    Navigator.of(context).push(SpotEditPage.routePage());
   }
 }

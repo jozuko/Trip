@@ -13,24 +13,26 @@ import 'package:trip/repository/log/trip_logger.dart';
 ///
 class Spot extends Equatable {
   final String docId;
-  final SpotType spot;
+  final SpotType spotType;
   final String? name;
   final String? phone;
   final String? address;
   final String? url;
   final Location? location;
   final OpenTimes openTimes;
+  final int stayTime;
   final Time updatedAt;
 
   const Spot({
     required this.docId,
-    required this.spot,
+    required this.spotType,
     this.name,
     this.phone,
     this.address,
     this.url,
     this.location,
     required this.openTimes,
+    required this.stayTime,
     required this.updatedAt,
   });
 
@@ -49,20 +51,21 @@ class Spot extends Equatable {
 
     return Spot(
       docId: snapshot.id,
-      spot: SpotTypeEx.fromFirestore(data?["spot"]),
+      spotType: SpotTypeEx.fromFirestore(data?["spot"]),
       name: FirestoreConverter.toNullableString(data?["name"]),
       phone: FirestoreConverter.toNullableString(data?["phone"]),
       address: FirestoreConverter.toNullableString(data?["address"]),
       url: FirestoreConverter.toNullableString(data?["url"]),
       location: locationGeo,
       openTimes: OpenTimes.fromFirestore(data?["openTime"]),
+      stayTime: FirestoreConverter.toNonNullInt(data?["stayTime"], 30),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }
 
   Map<String, Object?> toFirestore() {
     return {
-      "spot": spot.toFirestore(),
+      "spot": spotType.toFirestore(),
       "name": name,
       "phone": phone,
       "address": address,
@@ -76,7 +79,7 @@ class Spot extends Equatable {
   @override
   List<Object> get props => [
         docId,
-        spot,
+        spotType,
         name ?? "",
         phone ?? "",
         address ?? "",
@@ -90,7 +93,7 @@ class Spot extends Equatable {
   String toString() {
     return "["
         'docId: $docId, '
-        'spot: $spot, '
+        'spot: $spotType, '
         'name: ${name ?? ""}, '
         'phone: ${phone ?? ""}, '
         'address: ${address ?? ""}, '

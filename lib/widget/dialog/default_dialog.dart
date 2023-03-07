@@ -56,7 +56,7 @@ class DefaultDialog extends StatelessWidget {
     final displaySize = MediaQuery.of(context).size.width;
     final buttonSize = (displaySize - (_margin * 4) - 40.0) / 2;
 
-    final okButton = SquareTextButton.blackButton(
+    final okButton = SquareWidgetButton.blackButton(
       okLabel,
       width: buttonSize,
       height: buttonHeight,
@@ -67,7 +67,7 @@ class DefaultDialog extends StatelessWidget {
     );
 
     if (showCancel) {
-      final cancelButton = SquareTextButton.whiteButton(
+      final cancelButton = SquareWidgetButton.whiteButton(
         cancelLabel,
         width: buttonSize,
         height: buttonHeight,

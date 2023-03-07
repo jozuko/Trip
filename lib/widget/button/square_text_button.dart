@@ -11,7 +11,7 @@ import 'package:trip/util/text_style_ex.dart';
 /// Created by jozuko on 2023/02/17.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class SquareTextButton extends StatelessWidget {
+class SquareWidgetButton extends StatelessWidget {
   static const _buttonHeight = 60.0;
 
   final VoidCallback? onPressed;
@@ -30,7 +30,7 @@ class SquareTextButton extends StatelessWidget {
   final Color inkColor;
   final Color barrierColor;
 
-  const SquareTextButton({
+  const SquareWidgetButton({
     super.key,
     this.onPressed,
     required this.child,
@@ -120,14 +120,14 @@ class SquareTextButton extends StatelessWidget {
     );
   }
 
-  static SquareTextButton blackButton(
+  static SquareWidgetButton blackButton(
     String label, {
     double? width,
     double height = 40,
     double? radius,
     VoidCallback? onPressed,
   }) {
-    return SquareTextButton(
+    return SquareWidgetButton(
       width: width,
       height: height,
       radius: radius,
@@ -145,14 +145,35 @@ class SquareTextButton extends StatelessWidget {
     );
   }
 
-  static SquareTextButton whiteButton(
+  static SquareWidgetButton whiteButton(
     String label, {
     double? width,
     double height = 40,
     double? radius,
     VoidCallback? onPressed,
   }) {
-    return SquareTextButton(
+    return whiteWidgetButton(
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyleEx.normalStyle(textColor: TColors.whiteButtonText, isBold: false),
+        ),
+      ),
+      width: width,
+      height: height,
+      radius: radius,
+      onPressed: onPressed,
+    );
+  }
+
+  static SquareWidgetButton whiteWidgetButton({
+    required Widget child,
+    double? width,
+    double height = 40,
+    double? radius,
+    VoidCallback? onPressed,
+  }) {
+    return SquareWidgetButton(
       width: width,
       height: height,
       radius: radius,
@@ -162,12 +183,7 @@ class SquareTextButton extends StatelessWidget {
       showBarrier: false,
       showBorder: true,
       onPressed: onPressed,
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyleEx.normalStyle(textColor: TColors.whiteButtonText, isBold: false),
-        ),
-      ),
+      child: child,
     );
   }
 }

@@ -59,7 +59,7 @@ class _SettingsState extends BaseState<SettingsPage> {
   }
 
   Widget _buildMenu(String label, VoidCallback onTap) {
-    return SquareTextButton.whiteButton(
+    return SquareWidgetButton.whiteButton(
       label,
       onPressed: onTap,
     );

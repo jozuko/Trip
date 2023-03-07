@@ -11,7 +11,6 @@ import 'package:trip/util/text_style_ex.dart';
 ///
 class PasswordField extends StatefulWidget {
   final String labelText;
-  final String? initialValue;
   final String? errorText;
   final bool obscureText;
   final FocusNode? focusNode;
@@ -22,7 +21,6 @@ class PasswordField extends StatefulWidget {
   const PasswordField({
     super.key,
     this.labelText = 'パスワード',
-    this.initialValue,
     this.errorText,
     this.obscureText = true,
     this.focusNode,
@@ -67,7 +65,6 @@ class _LoginPasswordState extends State<PasswordField> {
         ),
       ),
       child: TextFormField(
-        initialValue: widget.initialValue ?? '',
         focusNode: widget.focusNode,
         obscureText: widget.obscureText,
         cursorColor: TColors.blackText,

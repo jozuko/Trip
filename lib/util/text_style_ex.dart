@@ -23,7 +23,7 @@ extension TextStyleEx on TextStyle {
   }
 
   static TextStyle largeStyle({
-    Color textColor = TColors.darkGray,
+    Color textColor = TColors.blackText,
     bool isBold = false,
   }) {
     return TextStyle(
@@ -34,7 +34,7 @@ extension TextStyleEx on TextStyle {
   }
 
   static TextStyle normalStyle({
-    Color textColor = TColors.darkGray,
+    Color textColor = TColors.blackText,
     bool isBold = false,
   }) {
     return TextStyle(
@@ -45,7 +45,7 @@ extension TextStyleEx on TextStyle {
   }
 
   static TextStyle smallStyle({
-    Color textColor = TColors.darkGray,
+    Color textColor = TColors.blackText,
     bool isBold = false,
   }) {
     return TextStyle(

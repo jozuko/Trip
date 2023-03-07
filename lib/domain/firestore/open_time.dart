@@ -6,15 +6,15 @@ import 'package:trip/repository/log/trip_logger.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class OpenTimes extends Equatable {
-  final List<OpenTime> openTimes;
+  final List<OpenTime> times;
 
   const OpenTimes({
-    required this.openTimes,
+    required this.times,
   });
 
   factory OpenTimes.fromFirestore(List<dynamic>? dataList) {
     if (dataList == null) {
-      return const OpenTimes(openTimes: []);
+      return const OpenTimes(times: []);
     }
 
     var openTimes = <OpenTime>[];
@@ -26,21 +26,23 @@ class OpenTimes extends Equatable {
       }
     }
 
-    return OpenTimes(openTimes: openTimes);
+    return OpenTimes(times: openTimes);
   }
 
   List<Map<String, Object?>> toFirestore() {
-    return openTimes.map((e) => e.toFirestore()).toList();
+    return times.map((e) => e.toFirestore()).toList();
   }
+
+  String get label => times.join(", ");
 
   @override
   List<Object?> get props => [
-        openTimes,
+        times,
       ];
 
   @override
   String toString() {
-    return '[${openTimes.join(",")}]';
+    return '[${times.join(",")}]';
   }
 }
 

@@ -44,4 +44,8 @@ class TColors {
 
   static const Color titleBackground = Color(0xFFF7F7F7);
   static const Color titleForeground = darkGray;
+
+  static const Color spotKankoBackground = Color(0xFFD1FED0);
+  static const Color spotOnsenBackground = Color(0xFFFED0D0);
+  static const Color spotStayBackground = Color(0xFFD4D0FE);
 }

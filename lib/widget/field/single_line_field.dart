@@ -10,18 +10,18 @@ import 'package:trip/util/text_style_ex.dart';
 class SingleLineField extends StatefulWidget {
   final String? labelText;
   final String? hintText;
-  final String? value;
   final TextInputType? textInputType;
   final TextInputAction? textInputAction;
   final String? errorText;
   final FocusNode? focusNode;
+  final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
 
   const SingleLineField({
     super.key,
     this.labelText,
     this.hintText,
-    this.value,
+    this.controller,
     this.textInputType,
     this.textInputAction,
     this.errorText,
@@ -36,18 +36,8 @@ class SingleLineField extends StatefulWidget {
 }
 
 class _SingleLineFieldState extends State<SingleLineField> {
-  final _inputController = TextEditingController();
-
-  @override
-  void dispose() {
-    _inputController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    _inputController.text = widget.value ?? '';
-
     return Container(
       padding: const EdgeInsets.all(8),
       height: widget.errorText == null ? 80 : 100,
@@ -58,7 +48,7 @@ class _SingleLineFieldState extends State<SingleLineField> {
         ),
       ),
       child: TextFormField(
-        controller: _inputController,
+        controller: widget.controller,
         focusNode: widget.focusNode,
         onChanged: widget.onChanged,
         cursorColor: TColors.blackText,
@@ -70,7 +60,7 @@ class _SingleLineFieldState extends State<SingleLineField> {
           enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
           focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
         ),
-        keyboardType: TextInputType.emailAddress,
+        keyboardType: widget.textInputType,
         textInputAction: widget.textInputAction,
         maxLines: 1,
       ),
