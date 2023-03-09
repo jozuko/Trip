@@ -13,6 +13,11 @@ import 'package:trip/widget/title_bar.dart';
 /// Created by jozuko on 2023/03/09.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
+/// TODO そのものズバリの緯度経度があれば、detail-searchに以降する
+/// TODO なかったらmarker表示、リストをしたからぴっぱれる様にする
+/// TODO markerタップ or リスト選択で、現在選択地を移動と詳細取得
+/// TODO 検索条件をいれて、地図の中心が動いたら再検索（なんかランドマーク見たいの出るようにできないかなぁ）検索回数を節約したいなぁ。。。
+///
 class SpotMapPage extends StatefulWidget {
   static Route<LocationData?> routePage({Key? key, LocationData? locationData, required SpotType spotType}) {
     return MaterialPageRoute(

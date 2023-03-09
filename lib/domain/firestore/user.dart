@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:trip/domain/firestore/firestore_converter.dart';
+import 'package:trip/domain/api_converter.dart';
 import 'package:trip/domain/firestore/time.dart';
 import 'package:trip/util/global.dart';
 
@@ -33,7 +33,7 @@ class User extends Equatable {
     final data = snapshot.data();
     return User(
       id: snapshot.id,
-      nickname: FirestoreConverter.toNonNullString(data?['nickname'], ""),
+      nickname: ApiConverter.toNonNullString(data?['nickname'], ""),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

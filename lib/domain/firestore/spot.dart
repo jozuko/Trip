@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:trip/domain/firestore/firestore_converter.dart';
+import 'package:trip/domain/api_converter.dart';
 import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/open_time.dart';
 import 'package:trip/domain/firestore/time.dart';
@@ -52,13 +52,13 @@ class Spot extends Equatable {
     return Spot(
       docId: snapshot.id,
       spotType: SpotTypeEx.fromFirestore(data?["spot"]),
-      name: FirestoreConverter.toNullableString(data?["name"]),
-      phone: FirestoreConverter.toNullableString(data?["phone"]),
-      address: FirestoreConverter.toNullableString(data?["address"]),
-      url: FirestoreConverter.toNullableString(data?["url"]),
+      name: ApiConverter.toNullableString(data?["name"]),
+      phone: ApiConverter.toNullableString(data?["phone"]),
+      address: ApiConverter.toNullableString(data?["address"]),
+      url: ApiConverter.toNullableString(data?["url"]),
       location: locationGeo,
       openTimes: OpenTimes.fromFirestore(data?["openTime"]),
-      stayTime: FirestoreConverter.toNonNullInt(data?["stayTime"], 30),
+      stayTime: ApiConverter.toNonNullInt(data?["stayTime"], 30),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

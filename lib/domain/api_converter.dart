@@ -2,7 +2,7 @@
 /// Created by jozuko on 2023/03/06.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class FirestoreConverter {
+class ApiConverter {
   static String? toNullableString(dynamic data, [String? defaultValue]) {
     if (data == null) {
       return defaultValue;
@@ -41,6 +41,30 @@ class FirestoreConverter {
     }
 
     return defaultValue;
+  }
+
+  static double toNonNullDouble(dynamic data, [double defaultValue = 0.0]) {
+    if (data == null) {
+      return defaultValue;
+    }
+
+    if (data is int) {
+      return data.toDouble();
+    }
+
+    if (data is double) {
+      return data;
+    }
+
+    if (data is String) {
+      return double.tryParse(data) ?? defaultValue;
+    }
+
+    return defaultValue;
+  }
+
+  static Map<String, dynamic>? toNonNullMap(dynamic data) {
+    return (data as Map<String, dynamic>?) ?? <String, dynamic>{};
   }
 
   static List<String> toStringList(dynamic data) {

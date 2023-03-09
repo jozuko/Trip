@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/repository/google_maps_place_api.dart';
+import 'package:trip/repository/google_maps/place_api_client.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/service/plan_service.dart';

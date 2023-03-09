@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:trip/domain/firestore/firestore_converter.dart';
+import 'package:trip/domain/api_converter.dart';
 import 'package:trip/domain/firestore/time.dart';
 
 ///
@@ -30,9 +30,9 @@ class Plan extends Equatable {
 
     return Plan(
       docId: snapshot.id,
-      name: FirestoreConverter.toNonNullString(data?["name"]),
+      name: ApiConverter.toNonNullString(data?["name"]),
       startTime: Time.fromFirestore(data?["startTime"]),
-      spotIds: FirestoreConverter.toStringList(data?["spotIds"]),
+      spotIds: ApiConverter.toStringList(data?["spotIds"]),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

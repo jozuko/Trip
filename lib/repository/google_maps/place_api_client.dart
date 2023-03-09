@@ -4,7 +4,7 @@ import 'package:trip/repository/log/http_curl_logger.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/util/global.dart';
 
-import '../domain/firestore/location.dart';
+import '../../domain/firestore/location.dart';
 
 ///
 /// Created by jozuko on 2023/03/09.
