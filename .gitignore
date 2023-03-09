@@ -138,3 +138,4 @@ app.*.symbols
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
 /画像/
+/Googleサンプルレスポンス/

@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:trip/repository/google_maps_place_api.dart';
 import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/service/auth_service.dart';
 import 'package:trip/service/bookmark_service.dart';
@@ -22,6 +23,7 @@ class DI {
     getIt.registerSingleton(sharedHolder);
 
     getIt.registerSingleton(FirestoreClient());
+    getIt.registerSingleton(GoogleMapsPlaceApi());
 
     getIt.registerSingleton(AuthService());
     getIt.registerSingleton(UrlAnalyzer());
