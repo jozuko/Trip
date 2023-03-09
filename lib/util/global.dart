@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:trip/di/dependency_injection.dart';
@@ -20,3 +22,13 @@ const double margin = 20.0;
 const double marginS = 10.0;
 
 typedef ChangeUserCallback = void Function(User? user);
+
+String get googleMapsApiKey {
+  if (Platform.isIOS) {
+    // restricted bundle-id
+    return "AIzaSyBphta6BfsymAhoczD-KJqIiEMikFmYHz4";
+  } else {
+    // restricted package
+    return "AIzaSyAGO48djvnrOUYGbsYiUAxG_zmYPiVs-n0";
+  }
+}

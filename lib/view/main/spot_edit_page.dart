@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/open_time.dart';
 import 'package:trip/domain/firestore/spot.dart';
+import 'package:trip/domain/location_data.dart';
 import 'package:trip/domain/spot_type.dart';
 import 'package:trip/util/colors.dart';
+import 'package:trip/util/datetime_ex.dart';
 import 'package:trip/util/global.dart';
+import 'package:trip/util/string_ex.dart';
 import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/spot_edit_bloc.dart';
+import 'package:trip/view/main/spot_map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
+import 'package:trip/widget/dialog/animation_dialog.dart';
+import 'package:trip/widget/dialog/select_bookmark_dialog.dart';
+import 'package:trip/widget/dialog/select_dialog.dart';
+import 'package:trip/widget/dialog/select_time.dart';
 import 'package:trip/widget/field/single_line_field.dart';
 import 'package:trip/widget/title_bar.dart';
 
@@ -115,6 +124,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         textInputType: TextInputType.text,
         textInputAction: TextInputAction.next,
         errorText: state.nameError,
+        showClear: _nameController.text.isNotEmpty,
         onChanged: _onChangeName,
       ),
       SingleLineField(
@@ -123,6 +133,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         textInputType: TextInputType.phone,
         textInputAction: TextInputAction.next,
         errorText: state.phoneError,
+        showClear: _phoneController.text.isNotEmpty,
         onChanged: _onChangePhone,
       ),
       SingleLineField(
@@ -131,6 +142,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         textInputType: TextInputType.text,
         textInputAction: TextInputAction.next,
         errorText: state.addressError,
+        showClear: _addressController.text.isNotEmpty,
         onChanged: _onChangeAddress,
       ),
       _buildUrl(state),
@@ -171,10 +183,12 @@ class _SpotEditState extends BaseState<SpotEditPage> {
       children: [
         Flexible(
           child: SingleLineField(
+            controller: _urlController,
             labelText: "URL",
             textInputType: TextInputType.url,
             textInputAction: TextInputAction.next,
             errorText: state.urlError,
+            showClear: _urlController.text.isNotEmpty,
             onChanged: _onChangeUrl,
           ),
         ),
@@ -193,17 +207,21 @@ class _SpotEditState extends BaseState<SpotEditPage> {
       children: [
         Flexible(
           child: SingleLineField(
+            controller: _locationController,
             labelText: "緯度・経度",
             textInputType: TextInputType.text,
             textInputAction: TextInputAction.done,
             errorText: state.locationError,
+            showClear: _locationController.text.isNotEmpty,
             onChanged: _onChangeLocation,
           ),
         ),
         const SizedBox(width: marginS),
         SquareIconButton(
           icon: Icons.map_rounded,
-          onPressed: _onPressedLocationButton,
+          onPressed: () {
+            _onPressedLocationButton(state);
+          },
         ),
       ],
     );
@@ -212,13 +230,14 @@ class _SpotEditState extends BaseState<SpotEditPage> {
   Widget _buildOpenTime(SpotEditState state) {
     final openTimes = state.openTimes;
     final openItems = <Widget>[];
-    for (var i = 0; i < openTimes.length; i++) {
-      openItems.add(_buildOpenTimeItem(openTimes[i], i));
+    for (var i = 0; i < openTimes.times.length; i++) {
+      openItems.add(_buildOpenTimeItem(openTimes.times[i], i));
     }
     openItems.add(_buildOpenTimeItem(null, -1));
 
     return Row(
       mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: 40,
@@ -229,6 +248,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         ),
         const SizedBox(width: marginS),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: openItems,
         ),
       ],
@@ -239,42 +259,45 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     final from = openTime?.from ?? "";
     final to = openTime?.to ?? "";
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SquareWidgetButton.whiteButton(
-          from,
-          width: 80,
-          height: 40,
-          onPressed: () {
-            _onPressedOpenTimeFrom(from, index);
-          },
-        ),
-        SizedBox(
-          width: 30,
-          height: 40,
-          child: Align(
-            alignment: Alignment.center,
-            child: Text("〜", style: TextStyleEx.normalStyle()),
-          ),
-        ),
-        SquareWidgetButton.whiteButton(
-          to,
-          width: 80,
-          height: 40,
-          onPressed: () {
-            _onPressedOpenTimeTo(to, index);
-          },
-        ),
-        if (openTime != null) const SizedBox(width: marginS),
-        if (openTime != null)
-          SquareIconButton.transparent(
-            Icons.remove_circle_outline_rounded,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: marginS),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SquareWidgetButton.whiteButton(
+            from,
+            width: 80,
+            height: 40,
             onPressed: () {
-              _onPressedOpenTimeRemove(index);
+              _onPressedOpenTimeFrom(from, index);
             },
           ),
-      ],
+          SizedBox(
+            width: 30,
+            height: 40,
+            child: Align(
+              alignment: Alignment.center,
+              child: Text("〜", style: TextStyleEx.normalStyle()),
+            ),
+          ),
+          SquareWidgetButton.whiteButton(
+            to,
+            width: 80,
+            height: 40,
+            onPressed: () {
+              _onPressedOpenTimeTo(to, index);
+            },
+          ),
+          if (openTime != null) const SizedBox(width: marginS),
+          if (openTime != null)
+            SquareIconButton.transparent(
+              Icons.remove_circle_outline_rounded,
+              onPressed: () {
+                _onPressedOpenTimeRemove(index);
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -282,39 +305,132 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     Navigator.pop(context);
   }
 
-  void _onPressedSpotType() {
-    // TODO 選択ダイアログの表示から
+  Future<void> _onPressedSpotType() async {
+    await showAnimatedDialog(
+      context: context,
+      builder: (_) {
+        return SelectDialog(
+          items: SpotType.values.map((spotType) => SelectDialogItem(value: spotType, label: spotType.label)).toList(),
+          onCanceled: () {
+            Navigator.of(context).pop();
+          },
+          onSelected: (value) {
+            BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeSpotTypeEvent(value));
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
   }
 
   void _onChangeName(String value) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeNameEvent(value: value));
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeNameEvent(value));
   }
 
   void _onChangePhone(String value) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangePhoneEvent(value: value));
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangePhoneEvent(value));
   }
 
   void _onChangeAddress(String value) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeAddressEvent(value: value));
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeAddressEvent(value));
   }
 
   void _onChangeUrl(String value) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeUrlEvent(value: value));
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeUrlEvent(value));
   }
 
   void _onChangeLocation(String value) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeLocationEvent(value: value));
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeLocationEvent(value));
   }
 
-  void _onPressedUrlButton() {}
+  Future<void> _onPressedUrlButton() async {
+    await showAnimatedDialog(
+      context: context,
+      builder: (_) {
+        return SelectBookmarkDialog(
+          items: BlocProvider.of<SpotEditBloc>(context).getBookmarks(),
+          onCanceled: () {
+            Navigator.of(context).pop();
+          },
+          onSelected: (value) {
+            BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeUrlEvent(value.url));
+            setState(() {
+              _setTextInitValue(_urlController, value.url);
+            });
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
 
-  void _onPressedLocationButton() {}
+  void _onPressedLocationButton(SpotEditState state) {
+    final location = Location.fromString(state.location);
+    LocationData? locationData;
+    if (location != null) {
+      locationData = LocationData(location: location, name: state.name, address: state.address);
+    }
 
-  void _onPressedOpenTimeFrom(String from, int index) {}
+    Navigator.push<LocationData?>(
+      context,
+      SpotMapPage.routePage(locationData: locationData, spotType: state.spotType),
+    ).then((value) {
+      if (value == null) {
+        return;
+      }
 
-  void _onPressedOpenTimeTo(String to, int index) {}
+      final locationLabel = value.location.label;
 
-  void _onPressedOpenTimeRemove(int index) {}
+      String? name;
+      if (state.name.isEmpty && value.name.isNotEmpty && value.name != state.name) {
+        name = value.name;
+      }
+
+      String? address;
+      if (state.address.isEmpty && value.address.isNotEmpty && value.address != state.address) {
+        address = value.address;
+      }
+
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditSetLocationDataEvent(value));
+      setState(() {
+        _setTextInitValue(_locationController, locationLabel);
+        if (name != null) {
+          _setTextInitValue(_nameController, name);
+        }
+        if (address != null) {
+          _setTextInitValue(_addressController, address);
+        }
+      });
+    });
+  }
+
+  Future<void> _onPressedOpenTimeFrom(String from, int index) async {
+    DateTime initTime = from.convertTime ?? DateTime.now().copyWith(hour: 0, minute: 0);
+
+    await SelectTime().showModal(
+      context,
+      initTime,
+      (value) {
+        BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeFromTimeEvent(index: index, value: value.format("HH:mm")));
+      },
+    );
+  }
+
+  Future<void> _onPressedOpenTimeTo(String to, int index) async {
+    DateTime initTime = to.convertTime ?? DateTime.now().copyWith(hour: 0, minute: 0);
+
+    await SelectTime().showModal(
+      context,
+      initTime,
+      (value) {
+        BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeToTimeEvent(index: index, value: value.format("HH:mm")));
+      },
+    );
+  }
+
+  void _onPressedOpenTimeRemove(int index) {
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditRemoveOpenTimeEvent(index: index));
+  }
 
   void _onPressSave() {}
 }

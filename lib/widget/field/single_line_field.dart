@@ -16,6 +16,7 @@ class SingleLineField extends StatefulWidget {
   final FocusNode? focusNode;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+  final bool showClear;
 
   const SingleLineField({
     super.key,
@@ -25,6 +26,7 @@ class SingleLineField extends StatefulWidget {
     this.textInputType,
     this.textInputAction,
     this.errorText,
+    this.showClear = false,
     this.focusNode,
     this.onChanged,
   });
@@ -39,7 +41,6 @@ class _SingleLineFieldState extends State<SingleLineField> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(8),
       height: widget.errorText == null ? 80 : 100,
       decoration: const BoxDecoration(
         color: TColors.white,
@@ -57,6 +58,7 @@ class _SingleLineFieldState extends State<SingleLineField> {
           labelText: widget.labelText,
           errorText: widget.errorText.emptyToNull,
           labelStyle: TextStyleEx.normalStyle(isBold: true),
+          suffixIcon: _buildClearButton(),
           enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
           focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: TColors.blackText)),
         ),
@@ -65,5 +67,21 @@ class _SingleLineFieldState extends State<SingleLineField> {
         maxLines: 1,
       ),
     );
+  }
+
+  Widget? _buildClearButton() {
+    if (widget.showClear) {
+      return IconButton(
+        onPressed: () {
+          widget.controller?.clear();
+        },
+        icon: const Icon(
+          Icons.highlight_remove_rounded,
+          color: TColors.blackText,
+        ),
+      );
+    } else {
+      return null;
+    }
   }
 }

@@ -63,6 +63,22 @@ extension SpotTypeEx on SpotType {
     }
   }
 
+  String get assetsPinName {
+    switch (this) {
+      case SpotType.kanko:
+        return 'assets/images/map_pin_kanko.png';
+
+      case SpotType.stay:
+        return 'assets/images/map_pin_stay.png';
+
+      case SpotType.onsen:
+        return 'assets/images/map_pin_onsen.png';
+
+      case SpotType.stayOnsen:
+        return 'assets/images/map_pin_stay_onsen.png';
+    }
+  }
+
   String get label {
     switch (this) {
       case SpotType.kanko:

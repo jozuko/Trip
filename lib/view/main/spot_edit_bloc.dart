@@ -1,8 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trip/domain/bookmark.dart';
 import 'package:trip/domain/firestore/open_time.dart';
 import 'package:trip/domain/firestore/spot.dart';
+import 'package:trip/domain/location_data.dart';
 import 'package:trip/domain/spot_type.dart';
+import 'package:trip/service/bookmark_service.dart';
 import 'package:trip/service/spot_service.dart';
 import 'package:trip/util/global.dart';
 
@@ -12,21 +15,33 @@ import 'package:trip/util/global.dart';
 ///
 class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
   final _spotService = getIt.get<SpotService>();
+  final _bookmarkService = getIt.get<BookmarkService>();
 
   SpotEditBloc(Spot? spot) : super(SpotEditState.fromSource(spot)) {
     on<SpotEditInitEvent>(_onInit);
+    on<SpotEditChangeSpotTypeEvent>(_onChangeSpotType);
     on<SpotEditChangeNameEvent>(_onChangeName);
     on<SpotEditChangePhoneEvent>(_onChangePhone);
     on<SpotEditChangeAddressEvent>(_onChangeAddress);
     on<SpotEditChangeUrlEvent>(_onChangeUrl);
     on<SpotEditChangeLocationEvent>(_onChangeLocation);
+    on<SpotEditSetLocationDataEvent>(_onSetLocationData);
+    on<SpotEditChangeFromTimeEvent>(_onChangeFromTime);
+    on<SpotEditChangeToTimeEvent>(_onChangeToTime);
+    on<SpotEditRemoveOpenTimeEvent>(_onRemoveOpenTime);
   }
 
-  void _onInit(SpotEditInitEvent event, emit) {
-    emit(state.copyWith(name: "aaaa"));
+  List<Bookmark> getBookmarks() {
+    return _bookmarkService.getAll();
   }
+
+  void _onInit(SpotEditInitEvent event, emit) {}
 
   SpotEditState get _initializedState => state.copyWith(initialized: true);
+
+  void _onChangeSpotType(SpotEditChangeSpotTypeEvent event, emit) {
+    emit(_initializedState.copyWith(spotType: event.value));
+  }
 
   void _onChangeName(SpotEditChangeNameEvent event, emit) {
     emit(_initializedState.copyWith(name: event.value));
@@ -47,6 +62,33 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
   void _onChangeLocation(SpotEditChangeLocationEvent event, emit) {
     emit(_initializedState.copyWith(location: event.value));
   }
+
+  void _onSetLocationData(SpotEditSetLocationDataEvent event, emit) {
+    var state = _initializedState;
+    if (state.name.isEmpty) {
+      state = state.copyWith(name: event.value.name);
+    }
+    if (state.address.isEmpty) {
+      state = state.copyWith(address: event.value.address);
+    }
+    state = state.copyWith(location: event.value.location.label);
+    emit(state);
+  }
+
+  void _onChangeFromTime(SpotEditChangeFromTimeEvent event, emit) {
+    final openTimes = _initializedState.openTimes.replaceTime(event.index, from: event.value);
+    emit(_initializedState.copyWith(openTimes: openTimes));
+  }
+
+  void _onChangeToTime(SpotEditChangeToTimeEvent event, emit) {
+    final openTimes = _initializedState.openTimes.replaceTime(event.index, to: event.value);
+    emit(_initializedState.copyWith(openTimes: openTimes));
+  }
+
+  void _onRemoveOpenTime(SpotEditRemoveOpenTimeEvent event, emit) {
+    final openTimes = _initializedState.openTimes.remove(event.index);
+    emit(_initializedState.copyWith(openTimes: openTimes));
+  }
 }
 
 abstract class SpotEditBaseEvent extends Equatable {
@@ -61,30 +103,85 @@ class SpotEditInitDoneEvent extends SpotEditBaseEvent {}
 abstract class SpotEditChangeBaseEvent extends SpotEditBaseEvent {
   final String value;
 
-  SpotEditChangeBaseEvent({required this.value});
+  SpotEditChangeBaseEvent(this.value);
+
+  @override
+  List<Object?> get props => [value];
+}
+
+class SpotEditChangeSpotTypeEvent extends SpotEditBaseEvent {
+  final SpotType value;
+
+  SpotEditChangeSpotTypeEvent(this.value);
 
   @override
   List<Object?> get props => [value];
 }
 
 class SpotEditChangeNameEvent extends SpotEditChangeBaseEvent {
-  SpotEditChangeNameEvent({required super.value});
+  SpotEditChangeNameEvent(super.value);
 }
 
 class SpotEditChangePhoneEvent extends SpotEditChangeBaseEvent {
-  SpotEditChangePhoneEvent({required super.value});
+  SpotEditChangePhoneEvent(super.value);
 }
 
 class SpotEditChangeAddressEvent extends SpotEditChangeBaseEvent {
-  SpotEditChangeAddressEvent({required super.value});
+  SpotEditChangeAddressEvent(super.value);
 }
 
 class SpotEditChangeUrlEvent extends SpotEditChangeBaseEvent {
-  SpotEditChangeUrlEvent({required super.value});
+  SpotEditChangeUrlEvent(super.value);
 }
 
 class SpotEditChangeLocationEvent extends SpotEditChangeBaseEvent {
-  SpotEditChangeLocationEvent({required super.value});
+  SpotEditChangeLocationEvent(super.value);
+}
+
+class SpotEditSetLocationDataEvent extends SpotEditBaseEvent {
+  final LocationData value;
+
+  SpotEditSetLocationDataEvent(this.value);
+
+  @override
+  List<Object?> get props => [value];
+}
+
+class SpotEditChangeFromTimeEvent extends SpotEditBaseEvent {
+  final int index;
+  final String value;
+
+  SpotEditChangeFromTimeEvent({
+    required this.index,
+    required this.value,
+  });
+
+  @override
+  List<Object?> get props => [index, value];
+}
+
+class SpotEditChangeToTimeEvent extends SpotEditBaseEvent {
+  final int index;
+  final String value;
+
+  SpotEditChangeToTimeEvent({
+    required this.index,
+    required this.value,
+  });
+
+  @override
+  List<Object?> get props => [index, value];
+}
+
+class SpotEditRemoveOpenTimeEvent extends SpotEditBaseEvent {
+  final int index;
+
+  SpotEditRemoveOpenTimeEvent({
+    required this.index,
+  });
+
+  @override
+  List<Object?> get props => [index];
 }
 
 class SpotEditState extends Equatable {
@@ -96,7 +193,7 @@ class SpotEditState extends Equatable {
   final String address;
   final String url;
   final String location;
-  final List<OpenTime> openTimes;
+  final OpenTimes openTimes;
   final String nameError;
   final String phoneError;
   final String addressError;
@@ -130,7 +227,7 @@ class SpotEditState extends Equatable {
       address: source?.address ?? "",
       url: source?.url ?? "",
       location: source?.location?.label ?? "",
-      openTimes: source?.openTimes.times ?? [],
+      openTimes: source?.openTimes ?? const OpenTimes(),
       nameError: "",
       phoneError: "",
       addressError: "",
@@ -147,7 +244,7 @@ class SpotEditState extends Equatable {
     String? address,
     String? url,
     String? location,
-    List<OpenTime>? openTimes,
+    OpenTimes? openTimes,
     String? nameError,
     String? phoneError,
     String? addressError,

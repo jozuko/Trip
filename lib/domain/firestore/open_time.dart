@@ -9,12 +9,12 @@ class OpenTimes extends Equatable {
   final List<OpenTime> times;
 
   const OpenTimes({
-    required this.times,
+    this.times = const <OpenTime>[],
   });
 
   factory OpenTimes.fromFirestore(List<dynamic>? dataList) {
     if (dataList == null) {
-      return const OpenTimes(times: []);
+      return const OpenTimes();
     }
 
     var openTimes = <OpenTime>[];
@@ -34,6 +34,36 @@ class OpenTimes extends Equatable {
   }
 
   String get label => times.join(", ");
+
+  OpenTimes replaceTime(
+    int index, {
+    String? from,
+    String? to,
+  }) {
+    List<OpenTime> times = [];
+    times.addAll(this.times);
+
+    if (index < 0 || index >= times.length) {
+      times.add(OpenTime(from: from ?? "", to: to ?? ""));
+    } else {
+      final source = times[index];
+      TripLog.d("time source $source");
+      times[index] = source.copyWith(from: from, to: to);
+    }
+
+    return OpenTimes(times: times);
+  }
+
+  OpenTimes remove(int index) {
+    List<OpenTime> times = [];
+    times.addAll(this.times);
+
+    if (index >= 0 && index < times.length) {
+      times.removeAt(index);
+    }
+
+    return OpenTimes(times: times);
+  }
 
   @override
   List<Object?> get props => [
@@ -83,6 +113,16 @@ class OpenTime extends Equatable {
       "from": from,
       "to": to,
     };
+  }
+
+  OpenTime copyWith({
+    String? from,
+    String? to,
+  }) {
+    return OpenTime(
+      from: from ?? this.from,
+      to: to ?? this.to,
+    );
   }
 
   @override
