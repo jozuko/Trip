@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/poi_service.dart';
 import 'package:trip/service/spot_service.dart';
 import 'package:trip/service/user_service.dart';
 import 'package:trip/util/global.dart';
@@ -22,12 +23,14 @@ enum AuthProvider {
 class AuthService {
   static final _auth = FirebaseAuth.instanceFor(app: Firebase.app(), persistence: Persistence.LOCAL);
   final sharedHolder = getIt.get<SharedHolder>();
+  bool isInitialized = false;
 
   User? get user => _auth.currentUser;
 
   AuthProvider get authProvider => sharedHolder.authProvider;
 
   void initialize(void Function(User? user)? callback) {
+    isInitialized = true;
     _auth.userChanges().listen((user) {
       callback?.call(user);
     });
@@ -52,6 +55,7 @@ class AuthService {
     getIt.get<UserService>().dispose();
     getIt.get<SpotService>().dispose();
     getIt.get<PlanService>().dispose();
+    getIt.get<PoiService>().dispose();
     sharedHolder.userId = null;
   }
 

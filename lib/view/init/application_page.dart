@@ -5,7 +5,6 @@ import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
 import 'package:trip/view/main/home_page.dart';
-import 'package:trip/view/receive_share/receive_share_bloc.dart';
 import 'package:trip/view/receive_share/receive_share_page.dart';
 import 'package:trip/view/signin/signin_page.dart';
 
@@ -41,27 +40,27 @@ class _ApplicationState extends State<ApplicationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ApplicationBloc, ApplicationState>(
+    return BlocConsumer<ApplicationBloc, ApplicationState>(
+      listener: (context, state) {
+        if (state.sharedText.isNotEmpty) {
+          TripLog.d('_ReceiveShareState::build ReceiveSharePage');
+          _moveToReceiveSharePage(state);
+        }
+      },
       builder: (context, state) {
         TripLog.d("ApplicationPage::build !! $state");
         Widget child;
 
-        if (state.sharedText.isNotEmpty) {
-          child = BlocProvider(
-            create: (context) => ReceiveShareBloc(url: state.sharedText),
-            child: const ReceiveSharePage(),
-          );
-        } else {
-          if (state.initialized) {
-            if (state.signedIn) {
-              child = HomePage.newPage();
-            } else {
-              child = SignInPage.newPage();
-            }
+        if (state.initialized) {
+          if (state.signedIn) {
+            child = HomePage.newPage();
           } else {
-            child = InitPage.newPage();
+            child = SignInPage.newPage();
           }
+        } else {
+          child = InitPage.newPage();
         }
+        TripLog.d('_ReceiveShareState::build $child');
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
@@ -76,5 +75,9 @@ class _ApplicationState extends State<ApplicationPage> {
         );
       },
     );
+  }
+
+  void _moveToReceiveSharePage(ApplicationState state) {
+    Navigator.of(context).push(ReceiveSharePage.routePage(sharedText: state.sharedText));
   }
 }

@@ -1,8 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/domain/bookmark.dart';
+import 'package:trip/domain/shared_poi.dart';
+import 'package:trip/domain/shared_text.dart';
 import 'package:trip/service/bookmark_service.dart';
-import 'package:trip/service/url_analyzer.dart';
+import 'package:trip/service/poi_service.dart';
+import 'package:trip/service/shared_text_analyzer.dart';
 import 'package:trip/util/global.dart';
 
 ///
@@ -10,10 +13,11 @@ import 'package:trip/util/global.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class ReceiveShareBloc extends Bloc<ReceiveShareBaseEvent, ReceiveShareBaseState> {
-  final _urlAnalyzer = getIt.get<UrlAnalyzer>();
+  final _sharedTextAnalyzer = getIt.get<SharedTextAnalyzer>();
   final _bookmarkService = getIt.get<BookmarkService>();
+  final _poiService = getIt.get<PoiService>();
 
-  ReceiveShareBloc({required String url}) : super(ReceiveShareState(bookmark: Bookmark(url: url, title: '', description: '', imageUrl: ''))) {
+  ReceiveShareBloc({required String sharedText}) : super(ReceiveShareState(sharedText: sharedText)) {
     on<ReceiveShareInitEvent>(_onInit);
     on<ReceiveShareChangeTitleEvent>(_onChangeTitle);
     on<ReceiveShareChangeUrlEvent>(_onChangeUrl);
@@ -23,14 +27,14 @@ class ReceiveShareBloc extends Bloc<ReceiveShareBaseEvent, ReceiveShareBaseState
   Future<void> _onInit(ReceiveShareInitEvent event, emit) async {
     final state = this.state;
     if (state is ReceiveShareState) {
-      final url = state.bookmark.url;
-      if (url.isEmpty) {
-        emit(ReceiveShareState(isLoading: false));
+      final sharedText = state.sharedText;
+      if (sharedText.isEmpty) {
+        emit(state.copyWith(isLoading: false));
         return;
       }
 
-      final analyzedUrl = await _urlAnalyzer.analyze(url);
-      emit(ReceiveShareState(initialized: false, isLoading: false, bookmark: analyzedUrl));
+      final analyzedData = await _sharedTextAnalyzer.analyze(sharedText);
+      emit(state.copyWith(initialized: false, isLoading: false, sharedData: analyzedData));
     }
   }
 
@@ -45,21 +49,30 @@ class ReceiveShareBloc extends Bloc<ReceiveShareBaseEvent, ReceiveShareBaseState
   void _onChangeTitle(ReceiveShareChangeTitleEvent event, emit) {
     final state = _initializedState;
     if (state != null) {
-      emit(state.copyWith(bookmark: state.bookmark.copyWith(title: event.title)));
+      emit(state.copyWith(sharedData: state.sharedData.copyWith(title: event.title)));
     }
   }
 
   void _onChangeUrl(ReceiveShareChangeUrlEvent event, emit) {
     final state = _initializedState;
     if (state != null) {
-      emit(state.copyWith(bookmark: state.bookmark.copyWith(url: event.url)));
+      emit(state.copyWith(sharedData: state.sharedData.copyWith(url: event.url)));
     }
   }
 
   Future<void> _onAddBookmark(ReceiveShareAddBookmarkEvent event, emit) async {
     final state = _initializedState;
     if (state != null) {
-      _bookmarkService.add(state.bookmark);
+      final sharedData = state.sharedData;
+
+      if (sharedData is Bookmark) {
+        await _bookmarkService.add(sharedData);
+      }
+
+      if (sharedData is SharedPoi) {
+        await _poiService.save(sharedData);
+      }
+
       emit(ReceiveShareDoneState());
     }
   }
@@ -100,23 +113,27 @@ abstract class ReceiveShareBaseState extends Equatable {
 class ReceiveShareState extends ReceiveShareBaseState {
   final bool initialized;
   final bool isLoading;
-  final Bookmark bookmark;
+  final String sharedText;
+  final SharedData sharedData;
 
   ReceiveShareState({
     this.initialized = false,
     this.isLoading = true,
-    Bookmark? bookmark,
-  }) : bookmark = bookmark ?? Bookmark.empty();
+    required this.sharedText,
+    this.sharedData = const Bookmark(),
+  });
 
   ReceiveShareState copyWith({
     bool? initialized,
     bool? isLoading,
-    Bookmark? bookmark,
+    String? sharedText,
+    SharedData? sharedData,
   }) {
     return ReceiveShareState(
       initialized: initialized ?? this.initialized,
       isLoading: isLoading ?? this.isLoading,
-      bookmark: bookmark ?? this.bookmark,
+      sharedText: sharedText ?? this.sharedText,
+      sharedData: sharedData ?? this.sharedData,
     );
   }
 
@@ -124,7 +141,8 @@ class ReceiveShareState extends ReceiveShareBaseState {
   List<Object?> get props => [
         initialized,
         isLoading,
-        bookmark,
+        sharedText,
+        sharedData,
       ];
 }
 

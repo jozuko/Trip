@@ -30,9 +30,9 @@ class Plan extends Equatable {
 
     return Plan(
       docId: snapshot.id,
-      name: ApiConverter.toNonNullString(data?["name"]),
+      name: DataConverter.toNonNullString(data?["name"]),
       startTime: Time.fromFirestore(data?["startTime"]),
-      spotIds: ApiConverter.toStringList(data?["spotIds"]),
+      spotIds: DataConverter.toStringList(data?["spotIds"]),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

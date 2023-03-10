@@ -4,8 +4,9 @@ import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/service/auth_service.dart';
 import 'package:trip/service/bookmark_service.dart';
 import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/poi_service.dart';
+import 'package:trip/service/shared_text_analyzer.dart';
 import 'package:trip/service/spot_service.dart';
-import 'package:trip/service/url_analyzer.dart';
 import 'package:trip/service/user_service.dart';
 
 import '../repository/firestore/firestore_client.dart';
@@ -23,14 +24,15 @@ class DI {
     getIt.registerSingleton(sharedHolder);
 
     getIt.registerSingleton(FirestoreClient());
-    getIt.registerSingleton(GoogleMapsPlaceApi());
+    getIt.registerSingleton(PlaceApiClient());
 
     getIt.registerSingleton(AuthService());
-    getIt.registerSingleton(UrlAnalyzer());
+    getIt.registerSingleton(SharedTextAnalyzer());
     getIt.registerSingleton(BookmarkService());
 
     getIt.registerSingleton(UserService());
     getIt.registerSingleton(PlanService());
     getIt.registerSingleton(SpotService());
+    getIt.registerSingleton(PoiService());
   }
 }

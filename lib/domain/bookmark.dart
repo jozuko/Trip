@@ -1,35 +1,21 @@
 import 'dart:convert';
 
-import 'package:equatable/equatable.dart';
+import 'package:trip/domain/shared_text.dart';
 import 'package:trip/util/json_model.dart';
 
 ///
 /// Created by jozuko on 2023/02/18.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class Bookmark extends Equatable {
-  final String url;
-  final String title;
-  final String description;
-  final String imageUrl;
-
+class Bookmark extends SharedData {
   const Bookmark({
-    required this.url,
-    required this.title,
-    required this.description,
-    required this.imageUrl,
+    super.url = '',
+    super.title = '',
+    super.description = '',
+    super.imageUrl = '',
   });
 
-  factory Bookmark.empty() {
-    return const Bookmark(
-      url: "",
-      title: "",
-      description: "",
-      imageUrl: "",
-    );
-  }
-
-  factory Bookmark.fromJsonMap(Map<String, dynamic> jsonMap) {
+  factory Bookmark.fromMap(Map<String, dynamic> jsonMap) {
     return Bookmark(
       url: JsonModel.stringValue(jsonMap['url']),
       title: JsonModel.stringValue(jsonMap['title']),
@@ -40,9 +26,10 @@ class Bookmark extends Equatable {
 
   factory Bookmark.fromJsonString(String jsonString) {
     Map<String, dynamic> jsonMap = const JsonDecoder().convert(jsonString);
-    return Bookmark.fromJsonMap(jsonMap);
+    return Bookmark.fromMap(jsonMap);
   }
 
+  @override
   Bookmark copyWith({
     String? url,
     String? title,
@@ -72,10 +59,12 @@ class Bookmark extends Equatable {
 
   @override
   String toString() {
-    return 'url: $url,'
-        'title: $title,'
-        'description: $description,'
-        'imageUrl: $imageUrl';
+    return 'Bookmark['
+        'url: $url, '
+        'title: $title, '
+        'description: $description, '
+        'imageUrl: $imageUrl'
+        ']';
   }
 
   @override

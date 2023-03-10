@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trip/domain/firestore/location.dart';
-import 'package:trip/domain/firestore/open_time.dart';
+import 'package:trip/domain/firestore/poi.dart';
 import 'package:trip/domain/firestore/spot.dart';
-import 'package:trip/domain/location_data.dart';
 import 'package:trip/domain/spot_type.dart';
 import 'package:trip/util/colors.dart';
-import 'package:trip/util/datetime_ex.dart';
 import 'package:trip/util/global.dart';
-import 'package:trip/util/string_ex.dart';
 import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
+import 'package:trip/view/main/poi_list_page.dart';
 import 'package:trip/view/main/spot_edit_bloc.dart';
-import 'package:trip/view/main/spot_map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
 import 'package:trip/widget/dialog/select_bookmark_dialog.dart';
 import 'package:trip/widget/dialog/select_dialog.dart';
-import 'package:trip/widget/dialog/select_time.dart';
+import 'package:trip/widget/field/multi_line_field.dart';
 import 'package:trip/widget/field/single_line_field.dart';
 import 'package:trip/widget/title_bar.dart';
 
@@ -50,6 +46,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
   final _addressController = TextEditingController();
   final _urlController = TextEditingController();
   final _locationController = TextEditingController();
+  final _memoController = TextEditingController();
 
   @override
   void initState() {
@@ -64,6 +61,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     _addressController.dispose();
     _urlController.dispose();
     _locationController.dispose();
+    _memoController.dispose();
 
     super.dispose();
   }
@@ -78,6 +76,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
           _setTextInitValue(_addressController, state.address);
           _setTextInitValue(_urlController, state.url);
           _setTextInitValue(_locationController, state.location);
+          _setTextInitValue(_memoController, state.memo);
         }
 
         return buildRootPage(
@@ -123,7 +122,6 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         controller: _nameController,
         textInputType: TextInputType.text,
         textInputAction: TextInputAction.next,
-        errorText: state.nameError,
         showClear: _nameController.text.isNotEmpty,
         onChanged: _onChangeName,
       ),
@@ -132,7 +130,6 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         controller: _phoneController,
         textInputType: TextInputType.phone,
         textInputAction: TextInputAction.next,
-        errorText: state.phoneError,
         showClear: _phoneController.text.isNotEmpty,
         onChanged: _onChangePhone,
       ),
@@ -141,13 +138,16 @@ class _SpotEditState extends BaseState<SpotEditPage> {
         controller: _addressController,
         textInputType: TextInputType.text,
         textInputAction: TextInputAction.next,
-        errorText: state.addressError,
         showClear: _addressController.text.isNotEmpty,
         onChanged: _onChangeAddress,
       ),
       _buildUrl(state),
       _buildLocation(state),
-      _buildOpenTime(state),
+      MultiLineField(
+        hintText: "メモ",
+        controller: _memoController,
+        onChanged: _onChangeMemo,
+      ),
     ];
 
     return children;
@@ -187,7 +187,6 @@ class _SpotEditState extends BaseState<SpotEditPage> {
             labelText: "URL",
             textInputType: TextInputType.url,
             textInputAction: TextInputAction.next,
-            errorText: state.urlError,
             showClear: _urlController.text.isNotEmpty,
             onChanged: _onChangeUrl,
           ),
@@ -211,7 +210,6 @@ class _SpotEditState extends BaseState<SpotEditPage> {
             labelText: "緯度・経度",
             textInputType: TextInputType.text,
             textInputAction: TextInputAction.done,
-            errorText: state.locationError,
             showClear: _locationController.text.isNotEmpty,
             onChanged: _onChangeLocation,
           ),
@@ -224,80 +222,6 @@ class _SpotEditState extends BaseState<SpotEditPage> {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildOpenTime(SpotEditState state) {
-    final openTimes = state.openTimes;
-    final openItems = <Widget>[];
-    for (var i = 0; i < openTimes.times.length; i++) {
-      openItems.add(_buildOpenTimeItem(openTimes.times[i], i));
-    }
-    openItems.add(_buildOpenTimeItem(null, -1));
-
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 40,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text("営業時間", style: TextStyleEx.normalStyle(isBold: true)),
-          ),
-        ),
-        const SizedBox(width: marginS),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: openItems,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOpenTimeItem(OpenTime? openTime, int index) {
-    final from = openTime?.from ?? "";
-    final to = openTime?.to ?? "";
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: marginS),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SquareWidgetButton.whiteButton(
-            from,
-            width: 80,
-            height: 40,
-            onPressed: () {
-              _onPressedOpenTimeFrom(from, index);
-            },
-          ),
-          SizedBox(
-            width: 30,
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text("〜", style: TextStyleEx.normalStyle()),
-            ),
-          ),
-          SquareWidgetButton.whiteButton(
-            to,
-            width: 80,
-            height: 40,
-            onPressed: () {
-              _onPressedOpenTimeTo(to, index);
-            },
-          ),
-          if (openTime != null) const SizedBox(width: marginS),
-          if (openTime != null)
-            SquareIconButton.transparent(
-              Icons.remove_circle_outline_rounded,
-              onPressed: () {
-                _onPressedOpenTimeRemove(index);
-              },
-            ),
-        ],
-      ),
     );
   }
 
@@ -343,6 +267,10 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeLocationEvent(value));
   }
 
+  void _onChangeMemo(String value) {
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeMemoEvent(value));
+  }
+
   Future<void> _onPressedUrlButton() async {
     await showAnimatedDialog(
       context: context,
@@ -365,71 +293,61 @@ class _SpotEditState extends BaseState<SpotEditPage> {
   }
 
   void _onPressedLocationButton(SpotEditState state) {
-    final location = Location.fromString(state.location);
-    LocationData? locationData;
-    if (location != null) {
-      locationData = LocationData(location: location, name: state.name, address: state.address);
-    }
-
-    Navigator.push<LocationData?>(
+    Navigator.push<Poi?>(
       context,
-      SpotMapPage.routePage(locationData: locationData, spotType: state.spotType),
+      PoiListPage.routePage(),
     ).then((value) {
       if (value == null) {
         return;
       }
 
-      final locationLabel = value.location.label;
-
       String? name;
-      if (state.name.isEmpty && value.name.isNotEmpty && value.name != state.name) {
-        name = value.name;
+      if (value.title != state.name) {
+        name = value.title;
       }
-
+      String? phone;
+      if (value.phoneNumber != state.phone) {
+        phone = value.phoneNumber;
+      }
       String? address;
-      if (state.address.isEmpty && value.address.isNotEmpty && value.address != state.address) {
+      if (value.address != state.address) {
         address = value.address;
       }
+      String? url;
+      if (value.url != state.url) {
+        url = value.url;
+      }
+      String? location;
+      if (value.location.label != state.location) {
+        location = value.location.label;
+      }
+      String? memo;
+      if (value.memo != state.memo) {
+        memo = value.memo;
+      }
 
-      BlocProvider.of<SpotEditBloc>(context).add(SpotEditSetLocationDataEvent(value));
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditSetPoiEvent(value));
       setState(() {
-        _setTextInitValue(_locationController, locationLabel);
         if (name != null) {
           _setTextInitValue(_nameController, name);
+        }
+        if (phone != null) {
+          _setTextInitValue(_phoneController, phone);
         }
         if (address != null) {
           _setTextInitValue(_addressController, address);
         }
+        if (url != null) {
+          _setTextInitValue(_urlController, url);
+        }
+        if (location != null) {
+          _setTextInitValue(_locationController, location);
+        }
+        if (memo != null) {
+          _setTextInitValue(_memoController, memo);
+        }
       });
     });
-  }
-
-  Future<void> _onPressedOpenTimeFrom(String from, int index) async {
-    DateTime initTime = from.convertTime ?? DateTime.now().copyWith(hour: 0, minute: 0);
-
-    await SelectTime().showModal(
-      context,
-      initTime,
-      (value) {
-        BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeFromTimeEvent(index: index, value: value.format("HH:mm")));
-      },
-    );
-  }
-
-  Future<void> _onPressedOpenTimeTo(String to, int index) async {
-    DateTime initTime = to.convertTime ?? DateTime.now().copyWith(hour: 0, minute: 0);
-
-    await SelectTime().showModal(
-      context,
-      initTime,
-      (value) {
-        BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeToTimeEvent(index: index, value: value.format("HH:mm")));
-      },
-    );
-  }
-
-  void _onPressedOpenTimeRemove(int index) {
-    BlocProvider.of<SpotEditBloc>(context).add(SpotEditRemoveOpenTimeEvent(index: index));
   }
 
   void _onPressSave() {}

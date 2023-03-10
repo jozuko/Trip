@@ -17,6 +17,15 @@ import 'package:trip/widget/title_bar.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class ReceiveSharePage extends StatefulWidget {
+  static Route routePage({Key? key, required String sharedText}) {
+    return MaterialPageRoute(
+      builder: (context) => BlocProvider(
+        create: (context) => ReceiveShareBloc(sharedText: sharedText),
+        child: ReceiveSharePage(key: key),
+      ),
+    );
+  }
+
   const ReceiveSharePage({super.key});
 
   @override
@@ -38,6 +47,7 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
 
   @override
   void dispose() {
+    TripLog.d('_ReceiveShareState::dispose');
     _titleController.dispose();
     _urlController.dispose();
     super.dispose();
@@ -47,26 +57,38 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   Widget build(BuildContext context) {
     return BlocConsumer<ReceiveShareBloc, ReceiveShareBaseState>(
       listener: (context, state) {
+        TripLog.d('_ReceiveShareState::build $state');
+
         if (state is ReceiveShareDoneState) {
           _onPressedBack();
         }
       },
       builder: (context, state) {
         if (state is ReceiveShareState) {
-          return Stack(
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  _buildTitleBar(),
-                  Padding(
-                    padding: const EdgeInsets.all(margin),
-                    child: _buildContents(state),
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+            child: Scaffold(
+              body: Container(
+                color: TColors.appBack,
+                child: SafeArea(
+                  child: Stack(
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          _buildTitleBar(),
+                          Padding(
+                            padding: const EdgeInsets.all(margin),
+                            child: _buildContents(state),
+                          ),
+                        ],
+                      ),
+                      LoadingWidget(visible: state.isLoading),
+                    ],
                   ),
-                ],
+                ),
               ),
-              LoadingWidget(visible: state.isLoading),
-            ],
+            ),
           );
         } else {
           return Container(
@@ -97,11 +119,11 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
 
   Widget _buildContents(ReceiveShareState state) {
     if (!state.initialized) {
-      _titleController.text = state.bookmark.title;
-      _titleController.value = _titleController.value.copyWith(selection: TextSelection(baseOffset: state.bookmark.title.length, extentOffset: state.bookmark.title.length));
+      _titleController.text = state.sharedData.title;
+      _titleController.value = _titleController.value.copyWith(selection: TextSelection(baseOffset: state.sharedData.title.length, extentOffset: state.sharedData.title.length));
 
-      _urlController.text = state.bookmark.url;
-      _urlController.value = _urlController.value.copyWith(selection: TextSelection(baseOffset: state.bookmark.url.length, extentOffset: state.bookmark.url.length));
+      _urlController.text = state.sharedData.url;
+      _urlController.value = _urlController.value.copyWith(selection: TextSelection(baseOffset: state.sharedData.url.length, extentOffset: state.sharedData.url.length));
     }
 
     return Column(
@@ -131,9 +153,7 @@ class _ReceiveShareState extends BaseState<ReceiveSharePage> {
   }
 
   void _onPressedBack() {
-    if (Platform.isAndroid) {
-      SystemNavigator.pop();
-    }
+    Navigator.pop(context);
   }
 
   void _onPressedAdd() {

@@ -2,7 +2,7 @@
 /// Created by jozuko on 2023/03/06.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class ApiConverter {
+class DataConverter {
   static String? toNullableString(dynamic data, [String? defaultValue]) {
     if (data == null) {
       return defaultValue;
@@ -63,7 +63,7 @@ class ApiConverter {
     return defaultValue;
   }
 
-  static Map<String, dynamic>? toNonNullMap(dynamic data) {
+  static Map<String, dynamic> toNonNullMap(dynamic data) {
     return (data as Map<String, dynamic>?) ?? <String, dynamic>{};
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 import 'package:trip/domain/api_converter.dart';
+import 'package:trip/domain/firestore/location.dart';
 
 ///
 /// Created by jozuko on 2023/03/09.
@@ -37,58 +38,36 @@ class PlaceListRes {
     return PlaceListRes(
       isSuccess: true,
       statusCode: statusCode,
-      results: results.map((result) => PlaceListResItem.fromMap(ApiConverter.toNonNullMap(result))).toList(),
+      results: results.map((result) => PlaceListResItem.fromMap(DataConverter.toNonNullMap(result))).toList(),
     );
   }
 }
 
 class PlaceListResItem {
-  final PlaceResGeometry geometry;
-  final String name;
   final String placeId;
+  final String name;
+  final Location location;
 
   const PlaceListResItem({
-    required this.geometry,
-    required this.name,
     required this.placeId,
-  });
-
-  factory PlaceListResItem.fromMap(Map<String, dynamic>? map) {
-    return PlaceListResItem(
-      geometry: PlaceResGeometry.fromMap(map?["geometry"]),
-      name: ApiConverter.toNonNullString(map?["name"]),
-      placeId: ApiConverter.toNonNullString(map?["place_id"]),
-    );
-  }
-}
-
-class PlaceResGeometry {
-  final PlaceResLocation location;
-
-  const PlaceResGeometry({
+    required this.name,
     required this.location,
   });
 
-  factory PlaceResGeometry.fromMap(Map<String, dynamic>? map) {
-    return PlaceResGeometry(
-      location: PlaceResLocation.fromMap(ApiConverter.toNonNullMap(map?["location"])),
+  factory PlaceListResItem.fromMap(Map<String, dynamic> map) {
+    return PlaceListResItem(
+      placeId: DataConverter.toNonNullString(map["place_id"]),
+      name: DataConverter.toNonNullString(map["name"]),
+      location: _getLocation(map),
     );
   }
-}
 
-class PlaceResLocation {
-  final double lat;
-  final double lng;
+  static Location _getLocation(Map<String, dynamic> map) {
+    final geometry = DataConverter.toNonNullMap(map["geometry"]);
+    final location = DataConverter.toNonNullMap(geometry["location"]);
+    final lat = DataConverter.toNonNullDouble(location["lat"]);
+    final lng = DataConverter.toNonNullDouble(location["lng"]);
 
-  const PlaceResLocation({
-    required this.lat,
-    required this.lng,
-  });
-
-  factory PlaceResLocation.fromMap(Map<String, dynamic>? map) {
-    return PlaceResLocation(
-      lat: ApiConverter.toNonNullDouble(map?["lat"], 0.0),
-      lng: ApiConverter.toNonNullDouble(map?["lng"], 0.0),
-    );
+    return Location(latitude: lat, longitude: lng);
   }
 }

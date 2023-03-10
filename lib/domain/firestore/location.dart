@@ -22,6 +22,12 @@ class Location extends Equatable {
       latitude: 35.68218126399646,
       longitude: 139.76356778894683);
 
+  /// 無効な地点情報
+  static const invalid = Location(
+    latitude: 0.0,
+    longitude: 0.0,
+  );
+
   static Location? fromString(String locationText) {
     if (locationText.isEmpty) {
       return null;
@@ -46,10 +52,10 @@ class Location extends Equatable {
 
   factory Location.fromFirestore(dynamic data) {
     if (data == null) {
-      throw "data is null";
+      Location.invalid;
     }
     if (data is! GeoPoint) {
-      throw "data is not GeoPoint";
+      Location.invalid;
     }
 
     return Location(
@@ -65,6 +71,16 @@ class Location extends Equatable {
   String get label => "$latitude,$longitude";
 
   LatLng get latLng => LatLng(latitude, longitude);
+
+  bool get isInvalid {
+    if (latitude == Location.invalid.latitude) {
+      return true;
+    }
+    if (longitude == Location.invalid.longitude) {
+      return true;
+    }
+    return false;
+  }
 
   @override
   List<Object?> get props => [

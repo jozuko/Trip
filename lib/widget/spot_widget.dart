@@ -125,7 +125,6 @@ class _SpotState extends BaseState<SpotWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSingleLineText(spot.name ?? "", style: TextStyleEx.normalStyle(textColor: TColors.blackStrongText, isBold: true)),
-                        _buildSingleLineText(spot.openTimes.label, style: TextStyleEx.smallStyle(textColor: TColors.blackText, isBold: false)),
                         _buildSingleLineText(spot.phone ?? "", style: TextStyleEx.smallStyle(textColor: TColors.blackText, isBold: false)),
                         _buildSingleLineText(spot.address ?? "", style: TextStyleEx.smallStyle(textColor: TColors.blackText, isBold: false)),
                       ],

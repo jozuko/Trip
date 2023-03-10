@@ -39,8 +39,8 @@ class BookmarkWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSingleLineText(bookmark.title ?? "", style: TextStyleEx.normalStyle(textColor: TColors.blackStrongText, isBold: true)),
-                _buildSingleMultilineText(bookmark.description ?? "", style: TextStyleEx.normalStyle()),
+                _buildSingleLineText(bookmark.title, style: TextStyleEx.normalStyle(textColor: TColors.blackStrongText, isBold: true)),
+                _buildSingleMultilineText(bookmark.description, style: TextStyleEx.normalStyle()),
               ],
             ),
           ),

@@ -23,7 +23,7 @@ class CurlLogger extends http_logger.Logger {
 
     String body = data.body != null ? " --data-raw '${data.body}'" : "";
 
-    final log = "curl --location --request $method '$uri'${headers.join("")}${body}";
+    final log = "curl --location --request $method '$uri'${headers.join("")}$body";
     TripLog.d(log);
   }
 

@@ -6,6 +6,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/service/auth_service.dart';
 import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/poi_service.dart';
 import 'package:trip/service/spot_service.dart';
 import 'package:trip/service/user_service.dart';
 import 'package:trip/util/global.dart';
@@ -40,12 +41,12 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
     });
 
     // ブラウザからの共有処理2
-    ReceiveSharingIntent.getInitialText().then((String? value) {
-      if (value.nullToEmpty.isNotEmpty) {
-        TripLog.d("ApplicationBloc::getInitialText value:$value");
-        add(ApplicationReceiveSharedEvent(value: value!));
-      }
-    });
+    final sharedText = (await ReceiveSharingIntent.getInitialText()).nullToEmpty;
+    if (sharedText.isNotEmpty) {
+      TripLog.d("ApplicationBloc::getInitialText sharedText:$sharedText");
+      add(ApplicationReceiveSharedEvent(value: sharedText));
+      return;
+    }
 
     // ログイン
     _authService.initialize((user) async {
@@ -53,6 +54,7 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
         await getIt.get<UserService>().initUser();
         await getIt.get<SpotService>().initSpots();
         await getIt.get<PlanService>().initPlans();
+        await getIt.get<PoiService>().initPois();
 
         add(ApplicationInitDoneEvent(signedIn: true));
       } else {

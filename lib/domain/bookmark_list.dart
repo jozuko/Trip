@@ -25,7 +25,7 @@ class BookmarkList extends DelegatingList<Bookmark> {
     final list = <Bookmark>[];
     for (var map in jsonList) {
       if (map is Map<String, dynamic>) {
-        final bookmark = Bookmark.fromJsonMap(map);
+        final bookmark = Bookmark.fromMap(map);
         list.add(bookmark);
       }
     }

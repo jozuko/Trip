@@ -33,7 +33,7 @@ class User extends Equatable {
     final data = snapshot.data();
     return User(
       id: snapshot.id,
-      nickname: ApiConverter.toNonNullString(data?['nickname'], ""),
+      nickname: DataConverter.toNonNullString(data?['nickname'], ""),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }

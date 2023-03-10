@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:trip/domain/firestore/plan.dart';
+import 'package:trip/domain/firestore/poi.dart';
 import 'package:trip/domain/firestore/spot.dart';
 import 'package:trip/domain/firestore/user.dart';
-import 'package:trip/repository/log/trip_logger.dart';
+import 'package:trip/repository/firestore/firestore_plan_client.dart';
+import 'package:trip/repository/firestore/firestore_poi_client.dart';
+import 'package:trip/repository/firestore/firestore_spot_client.dart';
+import 'package:trip/repository/firestore/firestore_user_client.dart';
 import 'package:trip/repository/shared_holder.dart';
 import 'package:trip/util/global.dart';
 
@@ -14,6 +18,11 @@ import 'package:trip/util/global.dart';
 ///
 class FirestoreClient {
   final shareHolder = getIt.get<SharedHolder>();
+  final _userClient = FirestoreUserClient();
+  final _planClient = FirestorePlanClient();
+  final _spotClient = FirestoreSpotClient();
+  final _poiClient = FirestorePoiClient();
+
   FirebaseFirestore? _db;
   String? _userId;
 
@@ -44,66 +53,30 @@ class FirestoreClient {
   }
 
   Future<User> getUser() async {
-    final userDocRef = _getUserDocRef();
-    if (userDocRef == null) {
-      final user = User.create(_userId);
-      await saveUser(user);
-      return user;
-    }
-
-    final userSnapshot = await userDocRef.get();
-    final user = userSnapshot.data();
-    if (user == null) {
-      final user = User.create(_userId);
-      await saveUser(user);
-      return user;
-    }
-
-    return user;
+    return await _userClient.get(getDb(), _getUserDocRef(), _userId);
   }
 
   Future<void> saveUser(User user) async {
-    await getDb()
-        .collection("users")
-        .doc(user.id)
-        .withConverter<User>(
-          fromFirestore: User.fromFirestore,
-          toFirestore: (User user, _) => user.toFirestore(),
-        )
-        .set(user);
+    return await _userClient.save(getDb(), user);
   }
 
   StreamSubscription<DocumentSnapshot<User>>? addUserListener({
     required void Function(DocumentSnapshot<User>) onData,
     required Function onError,
   }) {
-    return _getUserDocRef()?.snapshots().listen(onData, onError: onError);
+    return _userClient.addListener(_getUserDocRef(), onData: onData, onError: onError);
   }
 
   void cancelUserListener(StreamSubscription<DocumentSnapshot<User>>? listener) {
-    listener?.cancel();
+    _userClient.cancelListener(listener);
   }
 
   Future<List<Plan>> getPlans() async {
-    final userDocRef = _getUserDocRef();
-    if (userDocRef == null) {
-      return [];
-    }
+    return await _planClient.getAll(_getUserDocRef());
+  }
 
-    final plansRef = await userDocRef
-        .collection('plans')
-        .withConverter<Plan>(
-          fromFirestore: Plan.fromFirestore,
-          toFirestore: (Plan plan, _) => plan.toFirestore(),
-        )
-        .get();
-
-    final plans = <Plan>[];
-    for (var doc in plansRef.docs) {
-      final plan = doc.data();
-      TripLog.d("Firestore $plan");
-    }
-    return plans;
+  Future<Plan?> savePlan(Plan plan) async {
+    return await _planClient.save(_getUserDocRef(), plan);
   }
 
   StreamSubscription<QuerySnapshot<Plan>>? addPlanListener({
@@ -112,101 +85,19 @@ class FirestoreClient {
     required void Function(DocumentSnapshot<Plan>) onRemoved,
     required Function onError,
   }) {
-    return _getUserDocRef()
-        ?.collection('plans')
-        .withConverter<Plan>(
-          fromFirestore: Plan.fromFirestore,
-          toFirestore: (Plan plan, _) => plan.toFirestore(),
-        )
-        .snapshots()
-        .listen(
-      (event) {
-        if (!event.metadata.hasPendingWrites) {
-          for (var change in event.docChanges) {
-            switch (change.type) {
-              case DocumentChangeType.added:
-                onAdded(change.doc);
-                break;
-              case DocumentChangeType.modified:
-                onModified(change.doc);
-                break;
-              case DocumentChangeType.removed:
-                onRemoved(change.doc);
-                break;
-            }
-          }
-        }
-      },
-      onError: onError,
-    );
+    return _planClient.addListener(_getUserDocRef(), onAdded: onAdded, onModified: onModified, onRemoved: onRemoved, onError: onError);
   }
 
   void cancelPlanListener(StreamSubscription<QuerySnapshot<Plan>>? listener) {
-    listener?.cancel();
-  }
-
-  Future<Plan?> savePlan(Plan plan) async {
-    final userDocRef = _getUserDocRef();
-    if (userDocRef == null) {
-      throw "cannot create plan. UserDocRef is null";
-    }
-
-    final plansRef = userDocRef.collection('plans').withConverter<Plan>(
-          fromFirestore: Plan.fromFirestore,
-          toFirestore: (Plan plan, _) => plan.toFirestore(),
-        );
-
-    if (plan.docId.isEmpty) {
-      DocumentReference<Plan> planDocRef = await plansRef.add(plan);
-      final newPlan = await planDocRef.get();
-      return newPlan.data();
-    } else {
-      await plansRef.doc(plan.docId).set(plan);
-      return plan;
-    }
+    _planClient.cancelListener(listener);
   }
 
   Future<List<Spot>> getSpots() async {
-    final userDocRef = _getUserDocRef();
-    if (userDocRef == null) {
-      return [];
-    }
-
-    final spotsRef = await userDocRef
-        .collection('spots')
-        .withConverter<Spot>(
-          fromFirestore: Spot.fromFirestore,
-          toFirestore: (Spot spot, _) => spot.toFirestore(),
-        )
-        .get();
-
-    final spots = <Spot>[];
-    for (var doc in spotsRef.docs) {
-      final spot = doc.data();
-      TripLog.d("Firestore $spot");
-    }
-    return spots;
+    return await _spotClient.getAll(_getUserDocRef());
   }
 
   Future<Spot?> saveSpot(Spot spot) async {
-    final userDocRef = _getUserDocRef();
-    if (userDocRef == null) {
-      throw "cannot create spot. UserDocRef is null";
-    }
-
-    final spotsRef = userDocRef.collection('spots').withConverter<Spot>(
-          fromFirestore: Spot.fromFirestore,
-          toFirestore: (Spot spot, _) => spot.toFirestore(),
-        );
-
-    if (spot.docId.isEmpty) {
-      DocumentReference<Spot> spotDocRef = await spotsRef.add(spot);
-      final newSpot = await spotDocRef.get();
-      return newSpot.data();
-    } else {
-      await spotsRef.doc(spot.docId).set(spot);
-      return spot;
-    }
+    return await _spotClient.save(_getUserDocRef(), spot);
   }
 
   StreamSubscription<QuerySnapshot<Spot>>? addSpotListener({
@@ -215,36 +106,31 @@ class FirestoreClient {
     required void Function(DocumentSnapshot<Spot>) onRemoved,
     required Function onError,
   }) {
-    return _getUserDocRef()
-        ?.collection('spots')
-        .withConverter<Spot>(
-          fromFirestore: Spot.fromFirestore,
-          toFirestore: (Spot spot, _) => spot.toFirestore(),
-        )
-        .snapshots()
-        .listen(
-      (event) {
-        if (!event.metadata.hasPendingWrites) {
-          for (var change in event.docChanges) {
-            switch (change.type) {
-              case DocumentChangeType.added:
-                onAdded(change.doc);
-                break;
-              case DocumentChangeType.modified:
-                onModified(change.doc);
-                break;
-              case DocumentChangeType.removed:
-                onRemoved(change.doc);
-                break;
-            }
-          }
-        }
-      },
-      onError: onError,
-    );
+    return _spotClient.addListener(_getUserDocRef(), onAdded: onAdded, onModified: onModified, onRemoved: onRemoved, onError: onError);
   }
 
   void cancelSpotListener(StreamSubscription<QuerySnapshot<Spot>>? listener) {
-    listener?.cancel();
+    _spotClient.cancelListener(listener);
+  }
+
+  Future<List<Poi>> getPois() async {
+    return await _poiClient.getAll(_getUserDocRef());
+  }
+
+  Future<Poi?> savePoi(Poi poi) async {
+    return await _poiClient.save(_getUserDocRef(), poi);
+  }
+
+  StreamSubscription<QuerySnapshot<Poi>>? addPoiListener({
+    required void Function(DocumentSnapshot<Poi>) onAdded,
+    required void Function(DocumentSnapshot<Poi>) onModified,
+    required void Function(DocumentSnapshot<Poi>) onRemoved,
+    required Function onError,
+  }) {
+    return _poiClient.addListener(_getUserDocRef(), onAdded: onAdded, onModified: onModified, onRemoved: onRemoved, onError: onError);
+  }
+
+  void cancelPoiListener(StreamSubscription<QuerySnapshot<Poi>>? listener) {
+    _poiClient.cancelListener(listener);
   }
 }

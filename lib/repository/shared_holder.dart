@@ -9,6 +9,7 @@ enum Key {
   authProvider,
   userId,
   bookmarks,
+  tempPois,
 }
 
 class SharedHolder {
@@ -35,4 +36,8 @@ class SharedHolder {
   String get bookmarks => _prefs.getString(Key.bookmarks.name) ?? '';
 
   set bookmarks(String json) => _prefs.setString(Key.bookmarks.name, json);
+
+  String get tempPois => _prefs.getString(Key.tempPois.name) ?? "";
+
+  set tempPois(String json) => _prefs.setString(Key.tempPois.name, json);
 }

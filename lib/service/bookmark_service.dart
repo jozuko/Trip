@@ -10,7 +10,7 @@ import 'package:trip/util/global.dart';
 class BookmarkService {
   final sharedHolder = getIt.get<SharedHolder>();
 
-  void add(Bookmark? bookmark) {
+  Future<void> add(Bookmark? bookmark) async {
     if (bookmark == null) {
       return;
     }
