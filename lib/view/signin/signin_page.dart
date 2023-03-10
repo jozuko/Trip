@@ -6,9 +6,10 @@ import 'package:sign_in_button/sign_in_button.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/init/application_bloc.dart';
-import 'package:trip/view/signin/singin_bloc.dart';
-import 'package:trip/view/signin/singin_mail_bloc.dart';
-import 'package:trip/view/signin/singin_mail_page.dart';
+import 'package:trip/view/signin/signin_bloc.dart';
+import 'package:trip/view/signin/signin_mail_bloc.dart';
+import 'package:trip/view/signin/signin_mail_page.dart';
+import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -16,6 +17,13 @@ import 'package:trip/widget/title_bar.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class SignInPage extends StatefulWidget {
+  static Widget newPage({Key? key}) {
+    return BlocProvider(
+      create: (context) => SignInBloc(),
+      child: SignInPage(key: key),
+    );
+  }
+
   const SignInPage({super.key});
 
   @override
@@ -37,26 +45,29 @@ class _SignInState extends BaseState<SignInPage> {
 
         if (state.isDoneAuth) {
           BlocProvider.of<ApplicationBloc>(context).add(ApplicationCheckAuthEvent());
-        } else {
-          changeLoading(state.isLoading);
         }
       },
       builder: (context, state) {
-        return Column(
-          mainAxisSize: MainAxisSize.max,
+        return Stack(
           children: [
-            _buildTitleBar(),
-            Padding(
-              padding: const EdgeInsets.all(margin),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SignInButton(Buttons.email, onPressed: _onTapEmail),
-                  SignInButton(Buttons.google, onPressed: _onTapGoogle),
-                  if (Platform.isIOS) SignInButton(Buttons.apple, onPressed: _onTapApple),
-                ],
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                _buildTitleBar(),
+                Padding(
+                  padding: const EdgeInsets.all(margin),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SignInButton(Buttons.email, onPressed: _onTapEmail),
+                      SignInButton(Buttons.google, onPressed: _onTapGoogle),
+                      if (Platform.isIOS) SignInButton(Buttons.apple, onPressed: _onTapApple),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            LoadingWidget(visible: state.isLoading),
           ],
         );
       },
@@ -64,18 +75,11 @@ class _SignInState extends BaseState<SignInPage> {
   }
 
   Widget _buildTitleBar() {
-    return const TitleBar(title: '旅行プラン作成アプリ');
+    return const TitleBar();
   }
 
   void _onTapEmail() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => SignInMailBloc(),
-          child: const SignInMailPage(),
-        ),
-      ),
-    );
+    Navigator.of(context).push(SignInMailPage.routePage());
   }
 
   void _onTapGoogle() {

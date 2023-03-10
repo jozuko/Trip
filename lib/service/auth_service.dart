@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:trip/repository/log/trip_logger.dart';
 import 'package:trip/repository/shared_holder.dart';
+import 'package:trip/service/plan_service.dart';
+import 'package:trip/service/poi_service.dart';
+import 'package:trip/service/spot_service.dart';
+import 'package:trip/service/user_service.dart';
 import 'package:trip/util/global.dart';
 
 ///
@@ -19,21 +23,17 @@ enum AuthProvider {
 class AuthService {
   static final _auth = FirebaseAuth.instanceFor(app: Firebase.app(), persistence: Persistence.LOCAL);
   final sharedHolder = getIt.get<SharedHolder>();
+  bool isInitialized = false;
 
   User? get user => _auth.currentUser;
 
   AuthProvider get authProvider => sharedHolder.authProvider;
 
-  void initialize() {
-    _auth.userChanges().listen(onChangeUser);
-  }
-
-  void onChangeUser(User? user) {
-    if (user == null) {
-      TripLog.i('AuthService::onChangeAuthState user signed out');
-    } else {
-      TripLog.i('AuthService::onChangeAuthState user signed in');
-    }
+  void initialize(void Function(User? user)? callback) {
+    isInitialized = true;
+    _auth.userChanges().listen((user) {
+      callback?.call(user);
+    });
   }
 
   Future<AuthResultMail> authWithMail(String email, String password) async {
@@ -52,14 +52,22 @@ class AuthService {
     }
 
     await _auth.signOut();
+    getIt.get<UserService>().dispose();
+    getIt.get<SpotService>().dispose();
+    getIt.get<PlanService>().dispose();
+    getIt.get<PoiService>().dispose();
+    sharedHolder.userId = null;
   }
 
   Future<AuthResultMail> _signInWithEmailAndPassword(String email, String password) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      if (userCredential.user != null) {
+      final authUser = userCredential.user;
+      if (authUser != null) {
         TripLog.i('AuthService::signInWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultMail.success;
       } else {
         TripLog.i('AuthService::signInWithEmailAndPassword failed.');
@@ -88,9 +96,12 @@ class AuthService {
         email: email,
         password: password,
       );
-      if (userCredential.user != null) {
+      final authUser = userCredential.user;
+      if (authUser != null) {
         TripLog.i('AuthService::createUserWithEmailAndPassword success.');
         sharedHolder.authProvider = AuthProvider.email;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultMail.success;
       } else {
         TripLog.e('AuthService::createUserWithEmailAndPassword failed.');
@@ -129,12 +140,15 @@ class AuthService {
     // Once signed in, return the UserCredential
     try {
       final userCredential = await _auth.signInWithCredential(credential);
-      if (userCredential.user == null) {
+      final authUser = userCredential.user;
+      if (authUser == null) {
         TripLog.e('AuthService::authWithGoogle failed.');
         return AuthResultThirdParty.failed;
       } else {
         TripLog.i('AuthService::authWithGoogle success');
         sharedHolder.authProvider = AuthProvider.google;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultThirdParty.success;
       }
     } catch (e) {
@@ -153,13 +167,15 @@ class AuthService {
       } else {
         userCredential = await _auth.signInWithProvider(appleProvider);
       }
-
-      if (userCredential.user == null) {
+      final authUser = userCredential.user;
+      if (authUser == null) {
         TripLog.e('AuthService::authWithApple failed.');
         return AuthResultThirdParty.failed;
       } else {
         TripLog.i('AuthService::authWithApple success');
         sharedHolder.authProvider = AuthProvider.apple;
+        sharedHolder.userId = authUser.uid;
+
         return AuthResultThirdParty.success;
       }
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip/util/colors.dart';
-import 'package:trip/widget/button/square_rounded_button.dart';
+import 'package:trip/util/text_style_ex.dart';
+import 'package:trip/widget/button/square_text_button.dart';
 
 typedef DefaultDialogButtonPressedCallback = void Function(bool canceled);
 
@@ -39,7 +40,7 @@ class DefaultDialog extends StatelessWidget {
             children: [
               Text(
                 text,
-                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal, color: TColors.blackText),
+                style: TextStyleEx.normalStyle(textColor: TColors.blackText),
               ),
               const SizedBox(height: _margin),
               _buildBottomButtons(context),
@@ -55,44 +56,25 @@ class DefaultDialog extends StatelessWidget {
     final displaySize = MediaQuery.of(context).size.width;
     final buttonSize = (displaySize - (_margin * 4) - 40.0) / 2;
 
-    final okButton = SquareRoundedButton(
+    final okButton = SquareWidgetButton.blackButton(
+      okLabel,
       width: buttonSize,
       height: buttonHeight,
       radius: buttonHeight / 2,
-      backgroundColor: TColors.blackButtonBack,
-      inkColor: TColors.blackButtonInk,
-      showBarrier: false,
-      showBorder: false,
       onPressed: () {
         onPressedButton(false);
       },
-      child: Center(
-        child: Text(
-          okLabel,
-          style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal, color: TColors.blackButtonText),
-        ),
-      ),
     );
 
     if (showCancel) {
-      final cancelButton = SquareRoundedButton(
+      final cancelButton = SquareWidgetButton.whiteButton(
+        cancelLabel,
         width: buttonSize,
         height: buttonHeight,
         radius: buttonHeight / 2,
-        backgroundColor: TColors.whiteButtonBack,
-        inkColor: TColors.whiteButtonInk,
-        borderColor: TColors.whiteButtonBorder,
-        showBarrier: false,
-        showBorder: true,
         onPressed: () {
           onPressedButton(true);
         },
-        child: Center(
-          child: Text(
-            cancelLabel,
-            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal, color: TColors.whiteButtonText),
-          ),
-        ),
       );
       return Row(
         children: [

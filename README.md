@@ -26,3 +26,17 @@ cd ~/Library/Android/sdk/build-tools/33.0.0
 ```shell
 keytool -list -v -alias jozu_trip -keystore android/keystore/trip.jks
 ```
+
+## ビルド
+
+dummy_keyには、GoogleApiConsoleで作成したGoogleMap用のAPIキーを指定します。
+
+### android
+```
+flutter build appbundle --dart-define=GOOGLE_API_KEY=dummy_key
+```
+
+### ios
+```
+flutter build ipa --dart-define=GOOGLE_API_KEY=dummy_key
+```

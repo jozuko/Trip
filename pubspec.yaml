@@ -15,6 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   intl: ^0.17.0
   tuple: ^2.0.1
+  collection: ^1.16.0
 
   logger: ^1.1.0
   shared_preferences: ^2.0.17
@@ -27,8 +28,16 @@ dependencies:
   firebase_crashlytics: ^3.0.13
   firebase_auth: ^4.2.6
   google_sign_in: ^5.4.4
-
   sign_in_button: ^3.1.0
+  cloud_firestore: ^4.4.3
+
+  receive_sharing_intent: ^1.4.5
+  html: ^0.15.1
+  http: ^0.13.5
+  pretty_http_logger: ^0.2.1
+  url_launcher: ^6.1.9
+  google_maps_flutter: ^2.2.4
+  flutter_picker: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +53,9 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+
+  assets:
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

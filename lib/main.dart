@@ -20,9 +20,21 @@ Future<void> main() async {
   Bloc.observer = SimpleBlocObserver();
 
   runApp(
-    BlocProvider(
-      create: (context) => ApplicationBloc(),
-      child: const ApplicationPage(),
+    MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'NotoSansJP',
+      ),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          child: child!,
+        );
+      },
+      home: BlocProvider(
+        create: (context) => ApplicationBloc(),
+        child: const ApplicationPage(),
+      ),
     ),
   );
 }

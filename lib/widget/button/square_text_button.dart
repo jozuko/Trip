@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trip/util/colors.dart';
+import 'package:trip/util/text_style_ex.dart';
 
 ///
 /// Custom Button
@@ -10,7 +11,7 @@ import 'package:trip/util/colors.dart';
 /// Created by jozuko on 2023/02/17.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class SquareRoundedButton extends StatelessWidget {
+class SquareWidgetButton extends StatelessWidget {
   static const _buttonHeight = 60.0;
 
   final VoidCallback? onPressed;
@@ -29,7 +30,7 @@ class SquareRoundedButton extends StatelessWidget {
   final Color inkColor;
   final Color barrierColor;
 
-  const SquareRoundedButton({
+  const SquareWidgetButton({
     super.key,
     this.onPressed,
     required this.child,
@@ -116,6 +117,73 @@ class SquareRoundedButton extends StatelessWidget {
         ),
       ),
       child: barrierChild,
+    );
+  }
+
+  static SquareWidgetButton blackButton(
+    String label, {
+    double? width,
+    double height = 40,
+    double? radius,
+    VoidCallback? onPressed,
+  }) {
+    return SquareWidgetButton(
+      width: width,
+      height: height,
+      radius: radius,
+      backgroundColor: TColors.blackButtonBack,
+      inkColor: TColors.blackButtonInk,
+      showBarrier: false,
+      showBorder: false,
+      onPressed: onPressed,
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyleEx.normalStyle(textColor: TColors.blackButtonText, isBold: true),
+        ),
+      ),
+    );
+  }
+
+  static SquareWidgetButton whiteButton(
+    String label, {
+    double? width,
+    double height = 40,
+    double? radius,
+    VoidCallback? onPressed,
+  }) {
+    return whiteWidgetButton(
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyleEx.normalStyle(textColor: TColors.whiteButtonText, isBold: false),
+        ),
+      ),
+      width: width,
+      height: height,
+      radius: radius,
+      onPressed: onPressed,
+    );
+  }
+
+  static SquareWidgetButton whiteWidgetButton({
+    required Widget child,
+    double? width,
+    double height = 40,
+    double? radius,
+    VoidCallback? onPressed,
+  }) {
+    return SquareWidgetButton(
+      width: width,
+      height: height,
+      radius: radius,
+      backgroundColor: TColors.whiteButtonBack,
+      inkColor: TColors.whiteButtonInk,
+      borderColor: TColors.whiteButtonBorder,
+      showBarrier: false,
+      showBorder: true,
+      onPressed: onPressed,
+      child: child,
     );
   }
 }

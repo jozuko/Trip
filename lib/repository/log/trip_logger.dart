@@ -5,7 +5,7 @@ class TripLog {
   static Logger logger = Logger(
     filter: TripLogFilter(),
     printer: PrettyPrinter(
-      methodCount: 2,
+      methodCount: 0,
       // number of method calls to be displayed
       errorMethodCount: 8,
       // number of method calls if stacktrace is provided
@@ -15,7 +15,10 @@ class TripLog {
       // Colorful log messages
       printEmojis: true,
       // Print an emoji for each log message
-      printTime: true, // Should each log print contain a timestamp
+      printTime: false,
+      // Should each log print contain a timestamp
+
+      noBoxingByDefault: true,
     ),
   );
 

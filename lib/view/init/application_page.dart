@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trip/repository/log/trip_logger.dart';
+import 'package:trip/util/colors.dart';
 import 'package:trip/view/init/application_bloc.dart';
 import 'package:trip/view/init/init_page.dart';
 import 'package:trip/view/main/home_page.dart';
+import 'package:trip/view/receive_share/receive_share_page.dart';
 import 'package:trip/view/signin/signin_page.dart';
-import 'package:trip/view/signin/singin_bloc.dart';
-import 'package:trip/widget/loading.dart';
 
 ///
 /// Created by jozuko on 2023/02/16.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-enum _ApplicationPageType {
-  init,
-  sign,
-  home,
-}
-
 class ApplicationPage extends StatefulWidget {
   const ApplicationPage({
     super.key,
@@ -29,112 +24,60 @@ class ApplicationPage extends StatefulWidget {
 }
 
 class _ApplicationState extends State<ApplicationPage> {
-  _ApplicationPageType _selectedPageType = _ApplicationPageType.init;
+  @override
+  void initState() {
+    super.initState();
 
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = [];
-  final List<RouteObserver<PageRoute>> _routeObservers = [];
-  final Map<_ApplicationPageType, Widget> _pages = {};
+    BlocProvider.of<ApplicationBloc>(context).add(ApplicationInitEvent());
+  }
 
-  _ApplicationState() : super() {
-    for (var page in _ApplicationPageType.values) {
-      final globalKey = GlobalKey<NavigatorState>();
-      _navigatorKeys.add(globalKey);
+  @override
+  void dispose() {
+    BlocProvider.of<ApplicationBloc>(context).dispose();
 
-      final routeObserver = RouteObserver<PageRoute>();
-      _routeObservers.add(routeObserver);
-
-      switch (page) {
-        case _ApplicationPageType.init:
-          _pages[page] = const InitPage();
-          break;
-        case _ApplicationPageType.sign:
-          _pages[page] = BlocProvider(create: (context) => SignInBloc(), child: const SignInPage());
-          break;
-        case _ApplicationPageType.home:
-          _pages[page] = const HomePage();
-          break;
-      }
-    }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'NotoSansJP',
-      ),
-      builder: (context, child) {
+    return BlocConsumer<ApplicationBloc, ApplicationState>(
+      listener: (context, state) {
+        if (state.sharedText.isNotEmpty) {
+          TripLog.d('_ReceiveShareState::build ReceiveSharePage');
+          _moveToReceiveSharePage(state);
+        }
+      },
+      builder: (context, state) {
+        TripLog.d("ApplicationPage::build !! $state");
+        Widget child;
+
+        if (state.initialized) {
+          if (state.signedIn) {
+            child = HomePage.newPage();
+          } else {
+            child = SignInPage.newPage();
+          }
+        } else {
+          child = InitPage.newPage();
+        }
+        TripLog.d('_ReceiveShareState::build $child');
+
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-          child: child!,
+          child: Scaffold(
+            body: Container(
+              color: TColors.appBack,
+              child: SafeArea(
+                child: child,
+              ),
+            ),
+          ),
         );
       },
-      home: BlocBuilder<ApplicationBloc, ApplicationState>(
-        builder: (context, state) {
-          if (!state.initialized) {
-            _selectedPageType = _ApplicationPageType.init;
-          } else if (!state.signedIn) {
-            _selectedPageType = _ApplicationPageType.sign;
-          } else {
-            _selectedPageType = _ApplicationPageType.home;
-          }
-
-          return WillPopScope(
-            onWillPop: () async {
-              return _canPop(state);
-            },
-            child: Stack(
-              children: [
-                Scaffold(
-                  body: _buildContents(),
-                ),
-                LoadingWidget(visible: state.isLoading),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 
-  Future<bool> _canPop(ApplicationState state) async {
-    if (state.isLoading) {
-      return false;
-    }
-
-    final currentKeyState = _navigatorKeys[_selectedPageType.index].currentState;
-    if (currentKeyState?.canPop() == true) {
-      return await currentKeyState?.maybePop() == false;
-    }
-
-    return true;
-  }
-
-  Widget _buildContents() {
-    final pageContents = <Widget>[];
-    for (var page in _ApplicationPageType.values) {
-      pageContents.add(
-        Navigator(
-          key: _navigatorKeys[page.index],
-          observers: [_routeObservers[page.index]],
-          onGenerateRoute: (settings) {
-            return MaterialPageRoute(
-              settings: settings,
-              builder: (context) {
-                return _pages[page] ?? Container();
-              },
-            );
-          },
-        ),
-      );
-    }
-
-    return SafeArea(
-      child: IndexedStack(
-        index: _selectedPageType.index,
-        children: pageContents,
-      ),
-    );
+  void _moveToReceiveSharePage(ApplicationState state) {
+    Navigator.of(context).push(ReceiveSharePage.routePage(sharedText: state.sharedText));
   }
 }
