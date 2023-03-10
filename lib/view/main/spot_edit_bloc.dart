@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/domain/bookmark.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/poi.dart';
 import 'package:trip/domain/firestore/spot.dart';
+import 'package:trip/domain/firestore/time.dart';
 import 'package:trip/domain/spot_type.dart';
 import 'package:trip/service/bookmark_service.dart';
 import 'package:trip/service/spot_service.dart';
@@ -26,6 +28,7 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
     on<SpotEditChangeLocationEvent>(_onChangeLocation);
     on<SpotEditChangeMemoEvent>(_onChangeMemo);
     on<SpotEditSetPoiEvent>(_onSetPoi);
+    on<SpotEditSaveEvent>(_onSave);
   }
 
   List<Bookmark> getBookmarks() {
@@ -35,6 +38,55 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
   void _onInit(SpotEditInitEvent event, emit) {}
 
   SpotEditState get _initializedState => state.copyWith(initialized: true);
+
+  bool get hasDiff {
+    final state = _initializedState;
+    final source = state.source;
+    if (source == null) {
+      if (state.name.isNotEmpty) {
+        return true;
+      }
+      if (state.phone.isNotEmpty) {
+        return true;
+      }
+      if (state.address.isNotEmpty) {
+        return true;
+      }
+      if (state.url.isNotEmpty) {
+        return true;
+      }
+      if (state.location.isNotEmpty) {
+        return true;
+      }
+      if (state.memo.isNotEmpty) {
+        return true;
+      }
+      return false;
+    } else {
+      if (source.name != state.name) {
+        return true;
+      }
+      if (source.spotType != state.spotType) {
+        return true;
+      }
+      if (source.phone != state.phone) {
+        return true;
+      }
+      if (source.address != state.address) {
+        return true;
+      }
+      if (source.url != state.url) {
+        return true;
+      }
+      if (source.location.label != state.location) {
+        return true;
+      }
+      if (source.memo != state.memo) {
+        return true;
+      }
+      return false;
+    }
+  }
 
   void _onChangeSpotType(SpotEditChangeSpotTypeEvent event, emit) {
     emit(_initializedState.copyWith(spotType: event.value));
@@ -75,6 +127,28 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
       location: event.value.location.label,
       memo: event.value.memo,
     ));
+  }
+
+  Future<void> _onSave(SpotEditSaveEvent event, emit) async {
+    var state = _initializedState;
+    emit(state.copyWith(isLoading: true));
+
+    final spot = Spot(
+      docId: state.source?.docId ?? "",
+      placeId: state.placeId,
+      spotType: state.spotType,
+      name: state.name,
+      phone: state.phone,
+      address: state.address,
+      url: state.url,
+      location: Location.fromString(state.location) ?? Location.invalid,
+      memo: state.memo,
+      stayTime: state.source?.stayTime ?? 30,
+      updatedAt: Time.current(),
+    );
+
+    await _spotService.save(spot);
+    emit(state.copyWith(isLoading: false, isDone: true));
   }
 }
 
@@ -138,8 +212,12 @@ class SpotEditSetPoiEvent extends SpotEditBaseEvent {
   List<Object?> get props => [value];
 }
 
+class SpotEditSaveEvent extends SpotEditBaseEvent {}
+
 class SpotEditState extends Equatable {
   final bool initialized;
+  final bool isLoading;
+  final bool isDone;
   final Spot? source;
   final String placeId;
   final SpotType spotType;
@@ -152,6 +230,8 @@ class SpotEditState extends Equatable {
 
   const SpotEditState({
     required this.initialized,
+    required this.isLoading,
+    required this.isDone,
     required this.source,
     required this.placeId,
     required this.spotType,
@@ -166,6 +246,8 @@ class SpotEditState extends Equatable {
   factory SpotEditState.fromSource(Spot? source) {
     return SpotEditState(
       initialized: false,
+      isLoading: false,
+      isDone: false,
       source: source,
       placeId: source?.placeId ?? "",
       spotType: source?.spotType ?? SpotType.kanko,
@@ -180,6 +262,8 @@ class SpotEditState extends Equatable {
 
   SpotEditState copyWith({
     bool? initialized,
+    bool? isLoading,
+    bool? isDone,
     String? placeId,
     SpotType? spotType,
     String? name,
@@ -191,6 +275,8 @@ class SpotEditState extends Equatable {
   }) {
     return SpotEditState(
       initialized: initialized ?? this.initialized,
+      isLoading: isLoading ?? this.isLoading,
+      isDone: isDone ?? this.isDone,
       source: source,
       placeId: placeId ?? this.placeId,
       spotType: spotType ?? this.spotType,
@@ -206,6 +292,8 @@ class SpotEditState extends Equatable {
   @override
   List<Object?> get props => [
         initialized,
+        isLoading,
+        isDone,
         source,
         placeId,
         spotType,

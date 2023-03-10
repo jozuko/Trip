@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/string_ex.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
 import 'package:trip/widget/dialog/default_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 ///
 /// Created by jozuko on 2023/02/17.
@@ -66,5 +70,24 @@ abstract class BaseState<T extends StatefulWidget> extends State<T> {
       width: size,
       child: child,
     );
+  }
+
+  Future<void> openGoogleMapsApp([Location location = Location.def]) async {
+    String url = '';
+    if (Platform.isAndroid) {
+      url = 'geo:${location.latitude},${location.longitude}';
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+      } else {
+        throw 'Could not launch $url';
+      }
+    } else {
+      url = 'comgooglemaps://?saddr=&daddr=${location.latitude},${location.longitude}&directionsmode=driving';
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+      } else {
+        throw 'Could not launch $url';
+      }
+    }
   }
 }

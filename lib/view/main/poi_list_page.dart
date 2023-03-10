@@ -106,7 +106,7 @@ class _PoiListState extends BaseState<PoiListPage> {
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: marginS),
+      padding: const EdgeInsets.only(bottom: marginS),
       child: SquareWidgetButton.whiteWidgetButton(
         onPressed: () {
           _onPressedItem(poi);
@@ -163,6 +163,6 @@ class _PoiListState extends BaseState<PoiListPage> {
   }
 
   void _onPressAdd() {
-    // TODO GoogleMap起動！
+    openGoogleMapsApp();
   }
 }

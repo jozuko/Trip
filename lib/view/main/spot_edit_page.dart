@@ -12,10 +12,12 @@ import 'package:trip/view/main/spot_edit_bloc.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
+import 'package:trip/widget/dialog/default_dialog.dart';
 import 'package:trip/widget/dialog/select_bookmark_dialog.dart';
 import 'package:trip/widget/dialog/select_dialog.dart';
 import 'package:trip/widget/field/multi_line_field.dart';
 import 'package:trip/widget/field/single_line_field.dart';
+import 'package:trip/widget/loading.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
@@ -68,7 +70,12 @@ class _SpotEditState extends BaseState<SpotEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SpotEditBloc, SpotEditState>(
+    return BlocConsumer<SpotEditBloc, SpotEditState>(
+      listener: (context, state) {
+        if (state.isDone) {
+          _showDoneMessage();
+        }
+      },
       builder: (context, state) {
         if (!state.initialized) {
           _setTextInitValue(_nameController, state.name);
@@ -79,21 +86,32 @@ class _SpotEditState extends BaseState<SpotEditPage> {
           _setTextInitValue(_memoController, state.memo);
         }
 
-        return buildRootPage(
-          child: Column(
-            children: [
-              _buildTitle(),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(margin),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: _buildContent(state),
+        return WillPopScope(
+          onWillPop: () async {
+            _onPressedBack();
+            return false;
+          },
+          child: buildRootPage(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    _buildTitle(),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(margin),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: _buildContent(state),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
+                LoadingWidget(visible: state.isLoading),
+              ],
+            ),
           ),
         );
       },
@@ -226,7 +244,30 @@ class _SpotEditState extends BaseState<SpotEditPage> {
   }
 
   void _onPressedBack() {
-    Navigator.pop(context);
+    if (BlocProvider.of<SpotEditBloc>(context).hasDiff) {
+      showAnimatedDialog<bool>(
+        context: context,
+        builder: (_) {
+          return DefaultDialog(
+            text: '変更を保存しますか？',
+            okLabel: '保存する',
+            cancelLabel: '保存しない',
+            showCancel: true,
+            onPressedButton: (canceled) {
+              Navigator.pop(context, canceled);
+            },
+          );
+        },
+      ).then((canceled) {
+        if (canceled == true) {
+          Navigator.pop(context);
+        } else {
+          _onPressSave();
+        }
+      });
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> _onPressedSpotType() async {
@@ -350,5 +391,13 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     });
   }
 
-  void _onPressSave() {}
+  void _onPressSave() {
+    BlocProvider.of<SpotEditBloc>(context).add(SpotEditSaveEvent());
+  }
+
+  void _showDoneMessage() {
+    showMessage('保存しました。', callback: () {
+      Navigator.pop(context);
+    });
+  }
 }

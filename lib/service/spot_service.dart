@@ -30,6 +30,10 @@ class SpotService {
     return _spots;
   }
 
+  Future<void> save(Spot spot) async {
+    await _firestoreClient.saveSpot(spot);
+  }
+
   void _onAdded(DocumentSnapshot<Spot> spotSnapshot) {
     final spot = spotSnapshot.data();
     if (spot == null) {

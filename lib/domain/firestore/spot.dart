@@ -60,7 +60,7 @@ class Spot extends Equatable {
   Map<String, Object?> toFirestore() {
     return {
       "placeId": placeId,
-      "spot": spotType,
+      "spot": spotType.toFirestore(),
       "name": name,
       "phone": phone,
       "address": address,
