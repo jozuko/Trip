@@ -6,34 +6,44 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:trip/domain/firestore/location.dart';
-import 'package:trip/domain/spot_type.dart';
+import 'package:trip/domain/map_pin_type.dart';
 import 'package:trip/view/base_state.dart';
-import 'package:trip/view/main/spot_map_bloc.dart';
+import 'package:trip/view/map_bloc.dart';
 import 'package:trip/widget/title_bar.dart';
 
 ///
 /// Created by jozuko on 2023/03/09.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-class SpotMapPage extends StatefulWidget {
-  static Route<Location?> routePage({Key? key, Location? location, required SpotType spotType, required bool isEditable}) {
+class MapPage extends StatefulWidget {
+  static Route<Location?> routePage({
+    Key? key,
+    Location? location,
+    required MapPinType mapPinType,
+    required bool isEditable,
+  }) {
+    Location? initPos = location;
+    if (initPos == null || initPos.isInvalid) {
+      initPos = Location.def;
+    }
+
     return MaterialPageRoute(
       builder: (context) => BlocProvider(
-        create: (context) => SpotMapBloc(location, spotType, isEditable),
-        child: SpotMapPage(key: key),
+        create: (context) => MapBloc(initPos, mapPinType, isEditable),
+        child: MapPage(key: key),
       ),
     );
   }
 
-  const SpotMapPage({super.key});
+  const MapPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return _SpotMapState();
+    return _MapState();
   }
 }
 
-class _SpotMapState extends BaseState<SpotMapPage> {
+class _MapState extends BaseState<MapPage> {
   final _pinWidth = 45.0;
   final _pinHeight = 60.0;
   final GlobalKey _mapWidgetKey = GlobalKey();
@@ -48,12 +58,12 @@ class _SpotMapState extends BaseState<SpotMapPage> {
   @override
   void initState() {
     super.initState();
-    _pinLatLng = BlocProvider.of<SpotMapBloc>(context).state.source.latLng;
+    _pinLatLng = BlocProvider.of<MapBloc>(context).state.source.latLng;
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SpotMapBloc, SpotMapState>(
+    return BlocBuilder<MapBloc, MapState>(
       builder: (context, state) {
         return buildRootPage(
           child: Column(
@@ -83,7 +93,7 @@ class _SpotMapState extends BaseState<SpotMapPage> {
     );
   }
 
-  Widget _buildMap(SpotMapState state) {
+  Widget _buildMap(MapState state) {
     return FutureBuilder(
       future: _generateMarkers(state),
       initialData: const <Marker>{},
@@ -102,11 +112,11 @@ class _SpotMapState extends BaseState<SpotMapPage> {
     );
   }
 
-  Future<Set<Marker>> _generateMarkers(SpotMapState state) async {
+  Future<Set<Marker>> _generateMarkers(MapState state) async {
     final markers = <Marker>{};
     if (!state.isEditable) {
       // BitmapDescriptor.fromAssetImageはサイズがおかしいので自力で作成する
-      ByteData data = await rootBundle.load(state.spotType.assetsPinName);
+      ByteData data = await rootBundle.load(state.mapPinType.assetsPinName);
       ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: (_pinWidth * _devicePixelRatio).toInt(), targetHeight: (_pinHeight * _devicePixelRatio).toInt());
       ui.FrameInfo fi = await codec.getNextFrame();
       final Uint8List? markerIcon = (await fi.image.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
@@ -122,13 +132,13 @@ class _SpotMapState extends BaseState<SpotMapPage> {
     return markers;
   }
 
-  Widget _buildPin(SpotMapState state) {
+  Widget _buildPin(MapState state) {
     if (!state.isEditable) {
       return Container();
     }
 
     final pinImage = Image.asset(
-      state.spotType.assetsPinName,
+      state.mapPinType.assetsPinName,
       width: _pinWidth,
       height: _pinHeight,
     );

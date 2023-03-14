@@ -52,10 +52,10 @@ class Location extends Equatable {
 
   factory Location.fromFirestore(dynamic data) {
     if (data == null) {
-      Location.invalid;
+      return Location.invalid;
     }
     if (data is! GeoPoint) {
-      Location.invalid;
+      return Location.invalid;
     }
 
     return Location(

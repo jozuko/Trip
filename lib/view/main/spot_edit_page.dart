@@ -4,6 +4,7 @@ import 'package:trip/domain/bookmark.dart';
 import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/poi.dart';
 import 'package:trip/domain/firestore/spot.dart';
+import 'package:trip/domain/map_pin_type.dart';
 import 'package:trip/domain/spot_type.dart';
 import 'package:trip/util/colors.dart';
 import 'package:trip/util/global.dart';
@@ -11,7 +12,7 @@ import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/poi_list_page.dart';
 import 'package:trip/view/main/spot_edit_bloc.dart';
-import 'package:trip/view/main/spot_map_page.dart';
+import 'package:trip/view/map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
@@ -380,9 +381,9 @@ class _SpotEditState extends BaseState<SpotEditPage> {
 
   void _onPressedLocationButton(SpotEditState state) {
     Navigator.of(context)
-        .push(SpotMapPage.routePage(
+        .push(MapPage.routePage(
       location: Location.fromString(state.location),
-      spotType: state.spotType,
+      mapPinType: MapPinTypeEx.fromSpotType(state.spotType),
       isEditable: true,
     ))
         .then((Location? value) {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/user.dart';
 import 'package:trip/repository/firestore/firestore_client.dart';
 import 'package:trip/repository/log/trip_logger.dart';
@@ -40,5 +41,20 @@ class UserService {
 
   User? getUser() {
     return _user?.copyWith();
+  }
+
+  Future<User> updateHomePos(Location location) async {
+    User? user = _user;
+    if (user == null) {
+      throw "updateHomePos user is null.";
+    }
+    if (location.isInvalid) {
+      return user;
+    }
+
+    user = user.copyWith(homePos: location);
+    _user = user;
+    await _firestoreClient.saveUser(user);
+    return user;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:trip/domain/api_converter.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/time.dart';
 import 'package:trip/util/global.dart';
 
@@ -11,11 +12,13 @@ import 'package:trip/util/global.dart';
 class User extends Equatable {
   final String id;
   final String nickname;
+  final Location homePos;
   final Time updatedAt;
 
   const User({
     required this.id,
     required this.nickname,
+    required this.homePos,
     required this.updatedAt,
   });
 
@@ -23,7 +26,7 @@ class User extends Equatable {
     if (id == null) {
       throw "cannot create user. userId is null";
     }
-    return User(id: id, nickname: '', updatedAt: Time.current());
+    return User(id: id, nickname: '', homePos: Location.invalid, updatedAt: Time.current());
   }
 
   factory User.fromFirestore(
@@ -34,6 +37,7 @@ class User extends Equatable {
     return User(
       id: snapshot.id,
       nickname: DataConverter.toNonNullString(data?['nickname'], ""),
+      homePos: Location.fromFirestore(data?['homePos']),
       updatedAt: Time.fromFirestore(data?["updatedAt"]),
     );
   }
@@ -41,6 +45,7 @@ class User extends Equatable {
   Map<String, Object?> toFirestore() {
     return {
       "nickname": nickname,
+      "homePos": homePos.isInvalid ? null : homePos.toFirestore(),
       "updatedAt": updatedAt.toFirestore(),
     };
   }
@@ -48,11 +53,13 @@ class User extends Equatable {
   User copyWith({
     String? id,
     String? nickname,
+    Location? homePos,
     Time? updatedAt,
   }) {
     return User(
       id: id ?? this.id,
       nickname: nickname ?? this.nickname,
+      homePos: homePos ?? this.homePos,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -61,6 +68,7 @@ class User extends Equatable {
   List<Object?> get props => [
         id,
         nickname,
+        homePos,
         updatedAt,
       ];
 
@@ -74,6 +82,6 @@ class User extends Equatable {
     } else {
       maskedId = id;
     }
-    return '[id:$maskedId, nickname:$nickname, updatedAt:$updatedAt]';
+    return '[id:$maskedId, nickname:$nickname, homePos:$homePos, updatedAt:$updatedAt]';
   }
 }

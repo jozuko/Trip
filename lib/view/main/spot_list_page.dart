@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/domain/firestore/spot.dart';
+import 'package:trip/domain/map_pin_type.dart';
 import 'package:trip/util/global.dart';
 import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/spot_edit_page.dart';
 import 'package:trip/view/main/spot_list_bloc.dart';
-import 'package:trip/view/main/spot_map_page.dart';
+import 'package:trip/view/map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/spot_widget.dart';
 import 'package:trip/widget/title_bar.dart';
@@ -147,7 +148,7 @@ class _SpotListState extends BaseState<SpotListPage> {
   }
 
   void _onPressedMapItem(Spot spot) {
-    Navigator.of(context).push(SpotMapPage.routePage(location: spot.location, spotType: spot.spotType, isEditable: false));
+    Navigator.of(context).push(MapPage.routePage(location: spot.location, mapPinType: MapPinTypeEx.fromSpotType(spot.spotType), isEditable: false));
   }
 
   Future<void> _onPressedOpenWeb(Spot spot) async {
