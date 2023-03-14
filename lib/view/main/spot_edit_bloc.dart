@@ -26,6 +26,7 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
     on<SpotEditChangeAddressEvent>(_onChangeAddress);
     on<SpotEditChangeUrlEvent>(_onChangeUrl);
     on<SpotEditChangeLocationEvent>(_onChangeLocation);
+    on<SpotEditChangeStayTimeEvent>(_onChangeStayTime);
     on<SpotEditChangeMemoEvent>(_onChangeMemo);
     on<SpotEditSetPoiEvent>(_onSetPoi);
     on<SpotEditSaveEvent>(_onSave);
@@ -58,6 +59,9 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
       if (state.location.isNotEmpty) {
         return true;
       }
+      if (state.stayTime != Spot.stayTimeDef) {
+        return true;
+      }
       if (state.memo.isNotEmpty) {
         return true;
       }
@@ -79,6 +83,9 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
         return true;
       }
       if (source.location.label != state.location) {
+        return true;
+      }
+      if (source.stayTime != state.stayTime) {
         return true;
       }
       if (source.memo != state.memo) {
@@ -112,6 +119,10 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
     emit(_initializedState.copyWith(location: event.value));
   }
 
+  void _onChangeStayTime(SpotEditChangeStayTimeEvent event, emit) {
+    emit(_initializedState.copyWith(stayTime: event.value));
+  }
+
   void _onChangeMemo(SpotEditChangeMemoEvent event, emit) {
     emit(_initializedState.copyWith(memo: event.value));
   }
@@ -123,6 +134,7 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
       name: event.value.title,
       phone: event.value.phoneNumber,
       address: event.value.address,
+      imageUrl: event.value.imageUrl,
       url: event.value.url,
       location: event.value.location.label,
       memo: event.value.memo,
@@ -140,10 +152,11 @@ class SpotEditBloc extends Bloc<SpotEditBaseEvent, SpotEditState> {
       name: state.name,
       phone: state.phone,
       address: state.address,
+      imageUrl: state.imageUrl,
       url: state.url,
       location: Location.fromString(state.location) ?? Location.invalid,
       memo: state.memo,
-      stayTime: state.source?.stayTime ?? 30,
+      stayTime: state.stayTime,
       updatedAt: Time.current(),
     );
 
@@ -199,6 +212,15 @@ class SpotEditChangeLocationEvent extends SpotEditChangeBaseEvent {
   SpotEditChangeLocationEvent(super.value);
 }
 
+class SpotEditChangeStayTimeEvent extends SpotEditBaseEvent {
+  final int value;
+
+  SpotEditChangeStayTimeEvent({required this.value});
+
+  @override
+  List<Object?> get props => [value];
+}
+
 class SpotEditChangeMemoEvent extends SpotEditChangeBaseEvent {
   SpotEditChangeMemoEvent(super.value);
 }
@@ -224,8 +246,10 @@ class SpotEditState extends Equatable {
   final String name;
   final String phone;
   final String address;
+  final String imageUrl;
   final String url;
   final String location;
+  final int stayTime;
   final String memo;
 
   const SpotEditState({
@@ -238,8 +262,10 @@ class SpotEditState extends Equatable {
     required this.name,
     required this.phone,
     required this.address,
+    required this.imageUrl,
     required this.url,
     required this.location,
+    required this.stayTime,
     required this.memo,
   });
 
@@ -254,8 +280,10 @@ class SpotEditState extends Equatable {
       name: source?.name ?? "",
       phone: source?.phone ?? "",
       address: source?.address ?? "",
+      imageUrl: source?.imageUrl ?? "",
       url: source?.url ?? "",
       location: source?.location.label ?? "",
+      stayTime: source?.stayTime ?? Spot.stayTimeDef,
       memo: source?.memo ?? "",
     );
   }
@@ -269,8 +297,10 @@ class SpotEditState extends Equatable {
     String? name,
     String? phone,
     String? address,
+    String? imageUrl,
     String? url,
     String? location,
+    int? stayTime,
     String? memo,
   }) {
     return SpotEditState(
@@ -283,8 +313,10 @@ class SpotEditState extends Equatable {
       name: name ?? this.name,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      imageUrl: imageUrl ?? this.imageUrl,
       url: url ?? this.url,
       location: location ?? this.location,
+      stayTime: stayTime ?? this.stayTime,
       memo: memo ?? this.memo,
     );
   }
@@ -300,8 +332,10 @@ class SpotEditState extends Equatable {
         name,
         phone,
         address,
+        imageUrl,
         url,
         location,
+        stayTime,
         memo,
       ];
 }

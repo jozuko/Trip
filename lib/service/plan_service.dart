@@ -27,7 +27,7 @@ class PlanService {
   }
 
   List<Plan> getPlans() {
-    return _plans;
+    return _plans.map((e) => e.copyWith()).toList();
   }
 
   void _onAdded(DocumentSnapshot<Plan> planDocSnapshot) {

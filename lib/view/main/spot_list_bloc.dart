@@ -11,13 +11,24 @@ import 'package:trip/util/global.dart';
 class SpotListBloc extends Bloc<SpotListBaseEvent, SpotListState> {
   final _spotService = getIt.get<SpotService>();
 
-  SpotListBloc() : super(const SpotListState(spots: [])) {
+  SpotListBloc() : super(const SpotListState(isLoading: false, spots: [])) {
     on<SpotListInitEvent>(_onInit);
+    on<SpotListRefreshEvent>(_onRefresh);
+    on<SpotListRemoveItemEvent>(_onRemoveItem);
   }
 
   void _onInit(SpotListInitEvent event, emit) {
+    add(SpotListRefreshEvent());
+  }
+
+  void _onRefresh(SpotListRefreshEvent event, emit) {
     final spots = _spotService.getSpot();
-    emit(SpotListState(spots: spots));
+    emit(state.copyWith(spots: spots));
+  }
+
+  Future<void> _onRemoveItem(SpotListRemoveItemEvent event, emit) async {
+    await _spotService.remove(event.spot);
+    add(SpotListRefreshEvent());
   }
 }
 
@@ -28,11 +39,39 @@ abstract class SpotListBaseEvent extends Equatable {
 
 class SpotListInitEvent extends SpotListBaseEvent {}
 
-class SpotListState extends Equatable {
-  final List<Spot> spots;
+class SpotListRefreshEvent extends SpotListBaseEvent {}
 
-  const SpotListState({required this.spots});
+class SpotListRemoveItemEvent extends SpotListBaseEvent {
+  final Spot spot;
+
+  SpotListRemoveItemEvent(this.spot);
 
   @override
-  List<Object?> get props => [spots];
+  List<Object?> get props => [spot];
+}
+
+class SpotListState extends Equatable {
+  final bool isLoading;
+  final List<Spot> spots;
+
+  const SpotListState({
+    required this.isLoading,
+    required this.spots,
+  });
+
+  SpotListState copyWith({
+    bool? isLoading,
+    List<Spot>? spots,
+  }) {
+    return SpotListState(
+      isLoading: isLoading ?? this.isLoading,
+      spots: spots ?? this.spots,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        isLoading,
+        spots,
+      ];
 }

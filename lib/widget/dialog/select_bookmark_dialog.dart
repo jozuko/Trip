@@ -42,7 +42,6 @@ class SelectBookmarkDialog extends StatelessWidget {
                         onSelected?.call(items[idx]);
                       },
                     );
-                    ;
                   }),
             ),
             Padding(

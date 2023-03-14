@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:trip/domain/location_data.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/spot_type.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/spot_map_bloc.dart';
@@ -13,16 +15,11 @@ import 'package:trip/widget/title_bar.dart';
 /// Created by jozuko on 2023/03/09.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
-/// TODO そのものズバリの緯度経度があれば、detail-searchに以降する
-/// TODO なかったらmarker表示、リストをしたからぴっぱれる様にする
-/// TODO markerタップ or リスト選択で、現在選択地を移動と詳細取得
-/// TODO 検索条件をいれて、地図の中心が動いたら再検索（なんかランドマーク見たいの出るようにできないかなぁ）検索回数を節約したいなぁ。。。
-///
 class SpotMapPage extends StatefulWidget {
-  static Route<LocationData?> routePage({Key? key, LocationData? locationData, required SpotType spotType}) {
+  static Route<Location?> routePage({Key? key, Location? location, required SpotType spotType, required bool isEditable}) {
     return MaterialPageRoute(
       builder: (context) => BlocProvider(
-        create: (context) => SpotMapBloc(locationData, spotType),
+        create: (context) => SpotMapBloc(location, spotType, isEditable),
         child: SpotMapPage(key: key),
       ),
     );
@@ -44,14 +41,14 @@ class _SpotMapState extends BaseState<SpotMapPage> {
   bool isCompletedDraw = false;
   late GoogleMapController _mapController;
   LatLng _pinLatLng = const LatLng(0, 0);
-  Offset? _pinPos;
+  Offset? _pinTopLeftPos;
 
-  SpotMapState get blocState => BlocProvider.of<SpotMapBloc>(context).state;
+  double get _devicePixelRatio => Platform.isAndroid ? MediaQuery.of(context).devicePixelRatio : 1.0;
 
   @override
   void initState() {
     super.initState();
-    _pinLatLng = blocState.source.location.latLng;
+    _pinLatLng = BlocProvider.of<SpotMapBloc>(context).state.source.latLng;
   }
 
   @override
@@ -65,8 +62,8 @@ class _SpotMapState extends BaseState<SpotMapPage> {
               Expanded(
                 child: Stack(
                   children: [
-                    _buildMap(),
-                    _buildPin(),
+                    _buildMap(state),
+                    _buildPin(state),
                   ],
                 ),
               ),
@@ -86,32 +83,61 @@ class _SpotMapState extends BaseState<SpotMapPage> {
     );
   }
 
-  Widget _buildMap() {
-    return GoogleMap(
-      key: _mapWidgetKey,
-      onMapCreated: _onMapCreated,
-      onCameraIdle: _onCameraIdle,
-      onCameraMove: _onCameraMove,
-      onTap: _onTapMap,
-      initialCameraPosition: CameraPosition(
-        target: _pinLatLng,
-        zoom: 11.0,
+  Widget _buildMap(SpotMapState state) {
+    return FutureBuilder(
+      future: _generateMarkers(state),
+      initialData: const <Marker>{},
+      builder: (context, snapshot) => GoogleMap(
+        key: _mapWidgetKey,
+        markers: snapshot.data ?? const <Marker>{},
+        onMapCreated: _onMapCreated,
+        onCameraIdle: _onCameraIdle,
+        onCameraMove: _onCameraMove,
+        onTap: _onTapMap,
+        initialCameraPosition: CameraPosition(
+          target: _pinLatLng,
+          zoom: 18.0,
+        ),
       ),
     );
   }
 
-  Widget _buildPin() {
+  Future<Set<Marker>> _generateMarkers(SpotMapState state) async {
+    final markers = <Marker>{};
+    if (!state.isEditable) {
+      // BitmapDescriptor.fromAssetImageはサイズがおかしいので自力で作成する
+      ByteData data = await rootBundle.load(state.spotType.assetsPinName);
+      ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: (_pinWidth * _devicePixelRatio).toInt(), targetHeight: (_pinHeight * _devicePixelRatio).toInt());
+      ui.FrameInfo fi = await codec.getNextFrame();
+      final Uint8List? markerIcon = (await fi.image.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
+      if (markerIcon != null) {
+        markers.add(Marker(
+          markerId: MarkerId(state.source.label),
+          icon: BitmapDescriptor.fromBytes(markerIcon),
+          position: state.source.latLng,
+        ));
+      }
+    }
+
+    return markers;
+  }
+
+  Widget _buildPin(SpotMapState state) {
+    if (!state.isEditable) {
+      return Container();
+    }
+
     final pinImage = Image.asset(
-      blocState.spotType.assetsPinName,
+      state.spotType.assetsPinName,
       width: _pinWidth,
       height: _pinHeight,
     );
 
     return Visibility(
-      visible: _pinPos != null,
+      visible: _pinTopLeftPos != null,
       child: Positioned(
-        left: _pinPos?.dx ?? 0,
-        top: _pinPos?.dy ?? 0,
+        left: _pinTopLeftPos?.dx ?? 0,
+        top: _pinTopLeftPos?.dy ?? 0,
         child: Draggable(
           feedback: pinImage,
           childWhenDragging: Container(),
@@ -127,8 +153,7 @@ class _SpotMapState extends BaseState<SpotMapPage> {
   }
 
   void _onPressedDone() {
-    // TODO location
-    Navigator.pop(context, null);
+    Navigator.pop(context, Location(latitude: _pinLatLng.latitude, longitude: _pinLatLng.longitude));
   }
 
   void _onCameraIdle() {
@@ -141,7 +166,7 @@ class _SpotMapState extends BaseState<SpotMapPage> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-    if (_pinPos == null) {
+    if (_pinTopLeftPos == null) {
       _updatePinPosition(_pinLatLng);
     }
   }
@@ -174,17 +199,29 @@ class _SpotMapState extends BaseState<SpotMapPage> {
     final offset = _getOffsetFromScreenCoordinate(screenCoordinate);
     setState(() {
       _pinLatLng = latLng;
-      _pinPos = Offset(offset.dx - (_pinWidth / 2), offset.dy - _pinHeight);
+      _pinTopLeftPos = _getPinTopLeft(offset);
     });
   }
 
-  Future<void> _updatePinFromOffset(Offset offset) async {
-    final screenCoordinate = _getScreenCoordinateFromOffset(offset);
-    final latLng = await _mapController.getLatLng(screenCoordinate);
+  Future<void> _updatePinFromOffset(Offset pinTopLeft) async {
+    final latLng = await _getPinLatLng(pinTopLeft);
     setState(() {
       _pinLatLng = latLng;
-      _pinPos = offset;
+      _pinTopLeftPos = pinTopLeft;
     });
+  }
+
+  Future<LatLng> _getPinLatLng(Offset pinTopLeft) async {
+    final screenCoordinate = _getScreenCoordinateFromOffset(_getPinTip(pinTopLeft));
+    return await _mapController.getLatLng(screenCoordinate);
+  }
+
+  Offset _getPinTip(Offset pinTopLeft) {
+    return Offset(pinTopLeft.dx + (_pinWidth / 2), pinTopLeft.dy + _pinHeight);
+  }
+
+  Offset _getPinTopLeft(Offset pinTip) {
+    return Offset(pinTip.dx - (_pinWidth / 2), pinTip.dy - _pinHeight);
   }
 
   Future<bool> _isCompletedDrawMap() async {
@@ -196,19 +233,16 @@ class _SpotMapState extends BaseState<SpotMapPage> {
   }
 
   Offset _getOffsetFromScreenCoordinate(ScreenCoordinate coordinate) {
-    final devicePixelRatio = Platform.isAndroid ? MediaQuery.of(context).devicePixelRatio : 1.0;
     return Offset(
-      coordinate.x / devicePixelRatio,
-      coordinate.y / devicePixelRatio,
+      coordinate.x / _devicePixelRatio,
+      coordinate.y / _devicePixelRatio,
     );
   }
 
   ScreenCoordinate _getScreenCoordinateFromOffset(Offset offset) {
-    final devicePixelRatio = Platform.isAndroid ? MediaQuery.of(context).devicePixelRatio : 1.0;
-
     return ScreenCoordinate(
-      x: (offset.dx * devicePixelRatio).toInt(),
-      y: (offset.dy * devicePixelRatio).toInt(),
+      x: (offset.dx * _devicePixelRatio).toInt(),
+      y: (offset.dy * _devicePixelRatio).toInt(),
     );
   }
 

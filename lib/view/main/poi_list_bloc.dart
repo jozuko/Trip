@@ -9,9 +9,7 @@ import 'package:trip/util/global.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class PoiListBloc extends Bloc<PoiListBaseEvent, PoiListState> {
-  final _poiService = getIt.get<PoiService>();
-
-  PoiListBloc() : super(PoiListState(pois: getIt.get<PoiService>().getPois())) {}
+  PoiListBloc() : super(PoiListState(pois: getIt.get<PoiService>().getPois()));
 }
 
 abstract class PoiListBaseEvent extends Equatable {

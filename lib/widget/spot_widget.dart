@@ -7,6 +7,7 @@ import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
+import 'package:trip/widget/network_image_widget.dart';
 
 ///
 /// Created by jozuko on 2023/03/07.
@@ -14,18 +15,18 @@ import 'package:trip/widget/button/square_text_button.dart';
 ///
 class SpotWidget extends StatefulWidget {
   final Spot? spot;
-  final VoidCallback? onPressEdit;
-  final VoidCallback? onPressRemove;
-  final VoidCallback? onPressOpenWeb;
-  final VoidCallback? onPressLink;
+  final VoidCallback? onPressedEdit;
+  final VoidCallback? onPressedRemove;
+  final VoidCallback? onPressedMap;
+  final VoidCallback? onPressedOpenWeb;
 
   const SpotWidget({
     super.key,
     required this.spot,
-    this.onPressEdit,
-    this.onPressRemove,
-    this.onPressOpenWeb,
-    this.onPressLink,
+    this.onPressedEdit,
+    this.onPressedRemove,
+    this.onPressedMap,
+    this.onPressedOpenWeb,
   });
 
   @override
@@ -68,7 +69,7 @@ class _SpotState extends BaseState<SpotWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SquareIconButton(icon: Icons.edit_rounded, onPressed: widget.onPressEdit),
+                        SquareIconButton(icon: Icons.edit_rounded, onPressed: widget.onPressedEdit),
                         const SizedBox(width: marginS),
                       ],
                     ),
@@ -82,10 +83,28 @@ class _SpotState extends BaseState<SpotWidget> {
     );
   }
 
+  List<String> getDetails(Spot spot) {
+    final details = <String>[];
+    details.add(spot.name);
+    if (spot.phone.isNotEmpty) {
+      details.add(spot.phone);
+    }
+    if (spot.address.isNotEmpty) {
+      details.add(spot.address);
+    }
+    if (spot.memo.isNotEmpty) {
+      details.add(spot.memo);
+    }
+
+    return details;
+  }
+
   Widget _buildSpot(BuildContext context, Spot spot) {
+    final spotDetails = getDetails(spot);
+
     return SquareWidgetButton(
       onPressed: null,
-      height: 160,
+      height: 180,
       radius: 10,
       width: double.infinity,
       backgroundColor: spot.spotType.backgroundColor,
@@ -101,37 +120,32 @@ class _SpotState extends BaseState<SpotWidget> {
               spot.spotType.assetsIconName,
               width: 120,
               height: 120,
+              color: TColors.white,
               fit: BoxFit.fill,
             ),
           ),
           Column(
             children: [
-              Row(
-                children: [
-                  // TODO URLから画像を取得するWidgetが必要
-                  Container(
-                    color: TColors.lightGray,
-                    height: 100,
-                    width: 100,
-                    child: const Icon(
-                      Icons.photo,
-                      size: 48,
-                      color: TColors.darkGray,
+              SizedBox(
+                height: 120,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    NetworkImageWidget(spot.imageUrl, size: 100),
+                    const SizedBox(width: marginS),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: spotDetails.length,
+                        itemBuilder: (context, index) {
+                          final textStyle = index == 0 ? TextStyleEx.normalStyle(textColor: TColors.blackStrongText, isBold: true) : TextStyleEx.smallStyle();
+                          return SelectableText(spotDetails[index], style: textStyle);
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: marginS),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSingleLineText(spot.name ?? "", style: TextStyleEx.normalStyle(textColor: TColors.blackStrongText, isBold: true)),
-                        _buildSingleLineText(spot.phone ?? "", style: TextStyleEx.smallStyle(textColor: TColors.blackText, isBold: false)),
-                        _buildSingleLineText(spot.address ?? "", style: TextStyleEx.smallStyle(textColor: TColors.blackText, isBold: false)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: marginS),
-                ],
+                    const SizedBox(width: marginS),
+                  ],
+                ),
               ),
               Expanded(
                 child: Row(
@@ -147,13 +161,13 @@ class _SpotState extends BaseState<SpotWidget> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SquareIconButton(icon: Icons.edit_rounded, onPressed: widget.onPressEdit),
+                            SquareIconButton(icon: Icons.edit_rounded, onPressed: widget.onPressedEdit),
                             const SizedBox(width: marginS),
-                            SquareIconButton(icon: Icons.remove_rounded, onPressed: widget.onPressRemove),
+                            SquareIconButton(icon: Icons.remove_rounded, onPressed: widget.onPressedRemove),
                             const SizedBox(width: marginS),
-                            SquareIconButton(icon: Icons.public_rounded, onPressed: widget.onPressOpenWeb),
+                            SquareIconButton(icon: Icons.map_rounded, onPressed: widget.onPressedMap),
                             const SizedBox(width: marginS),
-                            SquareIconButton(icon: Icons.link_rounded, onPressed: widget.onPressLink),
+                            SquareIconButton(icon: Icons.public_rounded, onPressed: widget.onPressedOpenWeb),
                             const SizedBox(width: marginS),
                           ],
                         ),
@@ -166,15 +180,6 @@ class _SpotState extends BaseState<SpotWidget> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSingleLineText(String label, {required TextStyle style}) {
-    return Text(
-      label,
-      style: style,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 

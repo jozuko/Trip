@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trip/domain/bookmark.dart';
+import 'package:trip/domain/firestore/location.dart';
 import 'package:trip/domain/firestore/poi.dart';
 import 'package:trip/domain/firestore/spot.dart';
 import 'package:trip/domain/spot_type.dart';
@@ -9,10 +11,10 @@ import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/poi_list_page.dart';
 import 'package:trip/view/main/spot_edit_bloc.dart';
+import 'package:trip/view/main/spot_map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
 import 'package:trip/widget/dialog/animation_dialog.dart';
-import 'package:trip/widget/dialog/default_dialog.dart';
 import 'package:trip/widget/dialog/select_bookmark_dialog.dart';
 import 'package:trip/widget/dialog/select_dialog.dart';
 import 'package:trip/widget/field/multi_line_field.dart';
@@ -48,6 +50,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
   final _addressController = TextEditingController();
   final _urlController = TextEditingController();
   final _locationController = TextEditingController();
+  final _stayTimeController = TextEditingController();
   final _memoController = TextEditingController();
 
   @override
@@ -63,6 +66,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     _addressController.dispose();
     _urlController.dispose();
     _locationController.dispose();
+    _stayTimeController.dispose();
     _memoController.dispose();
 
     super.dispose();
@@ -83,6 +87,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
           _setTextInitValue(_addressController, state.address);
           _setTextInitValue(_urlController, state.url);
           _setTextInitValue(_locationController, state.location);
+          _setTextInitValue(_stayTimeController, state.stayTime.toString());
           _setTextInitValue(_memoController, state.memo);
         }
 
@@ -134,6 +139,8 @@ class _SpotEditState extends BaseState<SpotEditPage> {
 
   List<Widget> _buildContent(SpotEditState state) {
     final children = [
+      _buildImportButton(state),
+      const SizedBox(height: marginS),
       _buildSpotType(state),
       SingleLineField(
         labelText: "名称",
@@ -161,6 +168,14 @@ class _SpotEditState extends BaseState<SpotEditPage> {
       ),
       _buildUrl(state),
       _buildLocation(state),
+      SingleLineField(
+        labelText: "滞在時間",
+        controller: _stayTimeController,
+        textInputType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        showClear: _stayTimeController.text.isNotEmpty,
+        onChanged: _onChangeStayTime,
+      ),
       MultiLineField(
         hintText: "メモ",
         controller: _memoController,
@@ -169,6 +184,29 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     ];
 
     return children;
+  }
+
+  Widget _buildImportButton(SpotEditState state) {
+    return SquareWidgetButton.whiteWidgetButton(
+      onPressed: () {
+        _onPressedImportButton(state);
+      },
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.download_rounded,
+              color: TColors.blackText,
+            ),
+            Text(
+              'POIからインポート',
+              style: TextStyleEx.normalStyle(isBold: true),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSpotType(SpotEditState state) {
@@ -227,7 +265,7 @@ class _SpotEditState extends BaseState<SpotEditPage> {
             controller: _locationController,
             labelText: "緯度・経度",
             textInputType: TextInputType.text,
-            textInputAction: TextInputAction.done,
+            textInputAction: TextInputAction.next,
             showClear: _locationController.text.isNotEmpty,
             onChanged: _onChangeLocation,
           ),
@@ -243,49 +281,44 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     );
   }
 
-  void _onPressedBack() {
+  Future<void> _onPressedBack() async {
     if (BlocProvider.of<SpotEditBloc>(context).hasDiff) {
-      showAnimatedDialog<bool>(
-        context: context,
-        builder: (_) {
-          return DefaultDialog(
-            text: '変更を保存しますか？',
-            okLabel: '保存する',
-            cancelLabel: '保存しない',
-            showCancel: true,
-            onPressedButton: (canceled) {
-              Navigator.pop(context, canceled);
-            },
-          );
-        },
-      ).then((canceled) {
-        if (canceled == true) {
-          Navigator.pop(context);
-        } else {
-          _onPressSave();
-        }
-      });
+      await showConfirm(
+          message: '変更を保存しますか？',
+          okLabel: '保存する',
+          cancelLabel: '保存しない',
+          callback: (canceled) {
+            if (canceled) {
+              Navigator.pop(context);
+            } else {
+              _onPressSave();
+            }
+          });
     } else {
       Navigator.pop(context);
     }
   }
 
   Future<void> _onPressedSpotType() async {
-    await showAnimatedDialog(
+    showAnimatedDialog<SpotType?>(
       context: context,
       builder: (_) {
         return SelectDialog(
           items: SpotType.values.map((spotType) => SelectDialogItem(value: spotType, label: spotType.label)).toList(),
           onCanceled: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(null);
           },
           onSelected: (value) {
-            BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeSpotTypeEvent(value));
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(value);
           },
         );
       },
-    );
+    ).then((value) {
+      if (value == null) {
+        return;
+      }
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeSpotTypeEvent(value));
+    });
   }
 
   void _onChangeName(String value) {
@@ -308,32 +341,62 @@ class _SpotEditState extends BaseState<SpotEditPage> {
     BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeLocationEvent(value));
   }
 
+  void _onChangeStayTime(String value) {
+    final stayTime = int.tryParse(value);
+    if (stayTime != null) {
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeStayTimeEvent(value: stayTime));
+    }
+  }
+
   void _onChangeMemo(String value) {
     BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeMemoEvent(value));
   }
 
   Future<void> _onPressedUrlButton() async {
-    await showAnimatedDialog(
+    showAnimatedDialog<Bookmark?>(
       context: context,
       builder: (_) {
         return SelectBookmarkDialog(
           items: BlocProvider.of<SpotEditBloc>(context).getBookmarks(),
           onCanceled: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(null);
           },
           onSelected: (value) {
-            BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeUrlEvent(value.url));
-            setState(() {
-              _setTextInitValue(_urlController, value.url);
-            });
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(value);
           },
         );
       },
-    );
+    ).then((value) {
+      if (value == null) {
+        return;
+      }
+
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeUrlEvent(value.url));
+      setState(() {
+        _setTextInitValue(_urlController, value.url);
+      });
+    });
   }
 
   void _onPressedLocationButton(SpotEditState state) {
+    Navigator.of(context)
+        .push(SpotMapPage.routePage(
+      location: Location.fromString(state.location),
+      spotType: state.spotType,
+      isEditable: true,
+    ))
+        .then((Location? value) {
+      if (value == null || state.location == value.label) {
+        return;
+      }
+      BlocProvider.of<SpotEditBloc>(context).add(SpotEditChangeLocationEvent(value.label));
+      setState(() {
+        _setTextInitValue(_locationController, value.label);
+      });
+    });
+  }
+
+  void _onPressedImportButton(SpotEditState state) {
     Navigator.push<Poi?>(
       context,
       PoiListPage.routePage(),

@@ -133,6 +133,34 @@ class Poi extends Equatable {
     };
   }
 
+  Poi copyWith({
+    String? docId,
+    String? title,
+    String? description,
+    String? url,
+    String? imageUrl,
+    String? address,
+    String? phoneNumber,
+    Location? location,
+    List<String>? openingHours,
+    List<String>? types,
+    Time? updatedAt,
+  }) {
+    return Poi(
+      docId: docId ?? this.docId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      url: url ?? this.url,
+      imageUrl: imageUrl ?? this.imageUrl,
+      address: address ?? this.address,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      location: location?.copyWith() ?? this.location,
+      openingHours: openingHours?.map((e) => e).toList() ?? this.openingHours,
+      types: types?.map((e) => e).toList() ?? this.types,
+      updatedAt: updatedAt?.copyWith() ?? this.updatedAt,
+    );
+  }
+
   String get memo {
     final memo = <String>[];
     if (description.isNotEmpty) {

@@ -35,7 +35,7 @@ class PoiService {
   }
 
   List<Poi> getPois() {
-    return _pois;
+    return _pois.map((e) => e.copyWith()).toList();
   }
 
   void _onAdded(DocumentSnapshot<Poi> poiDocSnapshot) {

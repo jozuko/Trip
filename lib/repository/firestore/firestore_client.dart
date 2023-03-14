@@ -100,6 +100,10 @@ class FirestoreClient {
     return await _spotClient.save(_getUserDocRef(), spot);
   }
 
+  Future<void> removeSpot(Spot spot) async {
+    await _spotClient.remove(_getUserDocRef(), spot);
+  }
+
   StreamSubscription<QuerySnapshot<Spot>>? addSpotListener({
     required void Function(DocumentSnapshot<Spot>) onAdded,
     required void Function(DocumentSnapshot<Spot>) onModified,

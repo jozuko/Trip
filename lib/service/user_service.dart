@@ -39,6 +39,6 @@ class UserService {
   }
 
   User? getUser() {
-    return _user;
+    return _user?.copyWith();
   }
 }

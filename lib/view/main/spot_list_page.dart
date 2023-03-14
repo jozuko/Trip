@@ -6,9 +6,14 @@ import 'package:trip/util/text_style_ex.dart';
 import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/spot_edit_page.dart';
 import 'package:trip/view/main/spot_list_bloc.dart';
+import 'package:trip/view/main/spot_map_page.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
+import 'package:trip/widget/spot_widget.dart';
 import 'package:trip/widget/title_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+///
+/// TODO なんかフィルターほしい
 ///
 /// Created by jozuko on 2023/03/06.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
@@ -57,7 +62,10 @@ class _SpotListState extends BaseState<SpotListPage> {
                         child: ListView.builder(
                           itemCount: state.spots.length,
                           itemBuilder: (context, index) {
-                            return _buildSpotItem(context, state.spots[index]);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: marginS),
+                              child: _buildSpotItem(context, state.spots[index]),
+                            );
                           },
                         ),
                       )
@@ -93,7 +101,21 @@ class _SpotListState extends BaseState<SpotListPage> {
   }
 
   Widget _buildSpotItem(BuildContext context, Spot spot) {
-    return Container();
+    return SpotWidget(
+      spot: spot,
+      onPressedEdit: () {
+        _onPressedEditItem(spot);
+      },
+      onPressedRemove: () {
+        _onPressedRemoveItem(spot);
+      },
+      onPressedMap: () {
+        _onPressedMapItem(spot);
+      },
+      onPressedOpenWeb: () {
+        _onPressedOpenWeb(spot);
+      },
+    );
   }
 
   void _onBackPress() {
@@ -101,6 +123,40 @@ class _SpotListState extends BaseState<SpotListPage> {
   }
 
   void _onPressAdd() {
-    Navigator.of(context).push(SpotEditPage.routePage());
+    Navigator.of(context).push(SpotEditPage.routePage()).then((value) => BlocProvider.of<SpotListBloc>(context).add(SpotListInitEvent()));
+  }
+
+  void _onPressedEditItem(Spot spot) {
+    Navigator.of(context).push(SpotEditPage.routePage(spot: spot)).then((value) {
+      BlocProvider.of<SpotListBloc>(context).add(SpotListInitEvent());
+    });
+  }
+
+  Future<void> _onPressedRemoveItem(Spot spot) async {
+    await showConfirm(
+      message: '${spot.name}を削除します。\nよろしいですか？',
+      okLabel: '削除する',
+      cancelLabel: '削除しない',
+      callback: (canceled) {
+        if (canceled) {
+          return;
+        }
+        BlocProvider.of<SpotListBloc>(context).add(SpotListRemoveItemEvent(spot));
+      },
+    );
+  }
+
+  void _onPressedMapItem(Spot spot) {
+    Navigator.of(context).push(SpotMapPage.routePage(location: spot.location, spotType: spot.spotType, isEditable: false));
+  }
+
+  Future<void> _onPressedOpenWeb(Spot spot) async {
+    if (spot.url.isEmpty) {
+      return;
+    }
+    final uri = Uri.parse(spot.url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 }

@@ -30,6 +30,12 @@ class Time extends Equatable {
     return FieldValue.serverTimestamp();
   }
 
+  Time copyWith({int? seconds}) {
+    return Time(
+      seconds: seconds ?? this.seconds,
+    );
+  }
+
   @override
   List<Object?> get props => [seconds ?? -1];
 }

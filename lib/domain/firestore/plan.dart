@@ -10,7 +10,7 @@ import 'package:trip/domain/firestore/time.dart';
 class Plan extends Equatable {
   final String docId;
   final String name;
-  final Time? startTime;
+  final Time startTime;
   final List<String> spotIds;
   final Time updatedAt;
 
@@ -40,10 +40,26 @@ class Plan extends Equatable {
   Map<String, Object?> toFirestore() {
     return {
       "name": name,
-      "startTime": startTime?.toFirestore(),
+      "startTime": startTime.toFirestore(),
       "spotIds": spotIds,
       "updatedAt": updatedAt.toFirestore(),
     };
+  }
+
+  Plan copyWith({
+    String? docId,
+    String? name,
+    Time? startTime,
+    List<String>? spotIds,
+    Time? updatedAt,
+  }) {
+    return Plan(
+      docId: docId ?? this.docId,
+      name: name ?? this.name,
+      startTime: startTime?.copyWith() ?? this.startTime,
+      spotIds: spotIds?.map((e) => e).toList() ?? this.spotIds,
+      updatedAt: updatedAt?.copyWith() ?? this.updatedAt,
+    );
   }
 
   @override

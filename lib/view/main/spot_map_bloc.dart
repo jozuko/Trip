@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/domain/firestore/location.dart';
-import 'package:trip/domain/location_data.dart';
 import 'package:trip/domain/spot_type.dart';
 
 ///
@@ -9,9 +8,10 @@ import 'package:trip/domain/spot_type.dart';
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
 ///
 class SpotMapBloc extends Bloc<SpotMapBaseEvent, SpotMapState> {
-  SpotMapBloc(LocationData? locationData, SpotType spotType)
+  SpotMapBloc(Location? location, SpotType spotType, bool isEditable)
       : super(SpotMapState(
-          source: locationData ?? const LocationData(location: Location.def),
+          isEditable: isEditable,
+          source: location ?? Location.def,
           spotType: spotType,
         )) {
     on<SpotMapInitEvent>(_onInit);
@@ -28,10 +28,12 @@ abstract class SpotMapBaseEvent extends Equatable {
 class SpotMapInitEvent extends SpotMapBaseEvent {}
 
 class SpotMapState extends Equatable {
-  final LocationData source;
+  final bool isEditable;
+  final Location source;
   final SpotType spotType;
 
   const SpotMapState({
+    required this.isEditable,
     required this.source,
     required this.spotType,
   });

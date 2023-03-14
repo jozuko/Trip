@@ -82,6 +82,16 @@ class Location extends Equatable {
     return false;
   }
 
+  Location copyWith({
+    double? latitude,
+    double? longitude,
+  }) {
+    return Location(
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+    );
+  }
+
   @override
   List<Object?> get props => [
         latitude,

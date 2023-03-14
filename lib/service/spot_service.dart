@@ -27,11 +27,27 @@ class SpotService {
   }
 
   List<Spot> getSpot() {
-    return _spots;
+    return _spots.map((e) => e.copyWith()).toList();
   }
 
   Future<void> save(Spot spot) async {
-    await _firestoreClient.saveSpot(spot);
+    try {
+      final newSpot = await _firestoreClient.saveSpot(spot);
+      if (newSpot != null) {
+        _addOrReplaceSpotCache(newSpot);
+      }
+    } catch (e) {
+      TripLog.e("SpotService#save $e");
+    }
+  }
+
+  Future<void> remove(Spot spot) async {
+    try {
+      await _firestoreClient.removeSpot(spot);
+      _removeSpotCache(spot);
+    } catch (e) {
+      TripLog.e("SpotService#save $e");
+    }
   }
 
   void _onAdded(DocumentSnapshot<Spot> spotSnapshot) {
@@ -39,7 +55,7 @@ class SpotService {
     if (spot == null) {
       return;
     }
-    _addOrReplacePlan(spot);
+    _addOrReplaceSpotCache(spot);
   }
 
   void _onModified(DocumentSnapshot<Spot> spotSnapshot) {
@@ -47,7 +63,7 @@ class SpotService {
     if (spot == null) {
       return;
     }
-    _addOrReplacePlan(spot);
+    _addOrReplaceSpotCache(spot);
   }
 
   void _onRemoved(DocumentSnapshot<Spot> spotSnapshot) {
@@ -55,23 +71,28 @@ class SpotService {
     if (spot == null) {
       return;
     }
-
-    final index = _spots.indexWhere((element) => element.docId == spot.docId);
-    if (index >= 0) {
-      _spots.removeAt(index);
-    }
+    _removeSpotCache(spot);
   }
 
   void _onError(error) {
     TripLog.e("PlanListener#onError $error");
   }
 
-  void _addOrReplacePlan(Spot spot) {
+  void _addOrReplaceSpotCache(Spot spot) {
     final index = _spots.indexWhere((element) => element.docId == spot.docId);
+    TripLog.d("SpotService#_addOrReplaceSpotCache ${spot.docId}, $index");
     if (index < 0) {
       _spots.add(spot);
     } else {
       _spots[index] = spot;
+    }
+  }
+
+  void _removeSpotCache(Spot spot) {
+    final index = _spots.indexWhere((element) => element.docId == spot.docId);
+    TripLog.d("SpotService#_removeSpotCache ${spot.docId}, $index");
+    if (index >= 0) {
+      _spots.removeAt(index);
     }
   }
 }

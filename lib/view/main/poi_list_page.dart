@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip/domain/firestore/poi.dart';
@@ -10,8 +9,12 @@ import 'package:trip/view/base_state.dart';
 import 'package:trip/view/main/poi_list_bloc.dart';
 import 'package:trip/widget/button/square_icon_button.dart';
 import 'package:trip/widget/button/square_text_button.dart';
+import 'package:trip/widget/network_image_widget.dart';
 import 'package:trip/widget/title_bar.dart';
 
+///
+/// TODO スポットに登録済みとか出したい
+/// TODO なんかフィルターほしい
 ///
 /// Created by jozuko on 2023/03/10.
 /// Copyright (c) 2023 Studio Jozu. All rights reserved.
@@ -120,7 +123,7 @@ class _PoiListState extends BaseState<PoiListPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  buildImage(poi.imageUrl, size: 100),
+                  NetworkImageWidget(poi.imageUrl, size: 100),
                   const SizedBox(width: marginS),
                   Expanded(
                     child: Column(

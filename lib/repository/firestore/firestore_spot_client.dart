@@ -59,6 +59,19 @@ class FirestoreSpotClient {
     }
   }
 
+  Future<void> remove(DocumentReference<User>? userDocRef, Spot spot) async {
+    TripLog.d("FirestoreSpotClient#save start");
+    final collectionRef = _getCollectionRef(userDocRef);
+    if (collectionRef == null) {
+      throw "cannot save spot. DocRef is null";
+    }
+
+    if (spot.docId.isEmpty) {
+      return;
+    }
+    await collectionRef.doc(spot.docId).delete();
+  }
+
   StreamSubscription<QuerySnapshot<Spot>>? addListener(
     DocumentReference<User>? userDocRef, {
     required void Function(DocumentSnapshot<Spot>) onAdded,

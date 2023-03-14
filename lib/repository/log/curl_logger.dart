@@ -27,9 +27,9 @@ class CurlLogger extends http_logger.Logger {
     TripLog.d(log);
   }
 
-  @override
-  void logResponse(http_logger.ResponseData data) {
-    super.logResponse(data);
-    // TripLog.d('<-- ${data.statusCode} (${data.contentLength}-byte Body)');
-  }
+// @override
+// void logResponse(http_logger.ResponseData data) {
+//   super.logResponse(data);
+//   TripLog.d('<-- ${data.statusCode} (${data.contentLength}-byte Body)');
+// }
 }
